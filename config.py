@@ -10,8 +10,9 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+asyncpg://ai_user:%40Ymz3838437890@pgm-uf69uxw5f70j1940vo.pg.rds.aliyuncs.com:5432/ai_chat_db"
 
     # JWT配置
-    jwt_secret_key: str = "待填入............................................"
-    jwt_expire_minutes: int = 7 * 24 * 60  # 7天有效期
+    secret_key = "bd61eacac24b1ba8bf23d3406385f7218ebaa9695b8bff30f4ca7e5fcf9031e5"
+    algorithm = "HS256"
+    access_token_expire_minutes = 1440
 
     # OpenAI配置
     openai_api_key: str = "sk-ldhaiklzafalnajdjwcaxzrjmprorsezoxauhpzbbjxcjsmx"

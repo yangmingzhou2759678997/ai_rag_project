@@ -19,3 +19,6 @@ tenacity==8.5.0  # 升级到最新版，修复了重试逻辑的bug
 pyjwt==2.9.0  # 修复了安全漏洞
 bcrypt==4.2.0  # 性能提升
 python-multipart==0.0.12  # 修复了文件上传的bug
+
+# logger配置
+loguru==0.7.2

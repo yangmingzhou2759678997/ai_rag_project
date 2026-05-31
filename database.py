@@ -41,7 +41,7 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 async def lifespan(app: FastAPI):
 
     # 显式导入你的模型类，让 Base 感知到表结构
-    import model_definition # 💡 确保这里和你创建的文件名完全对齐
+    import models # 💡 确保这里和你创建的文件名完全对齐
 
     logging.info("🚀 [Database] 正在检查并自动创建线上数据库表...")
     # 创建所有表
