@@ -22,3 +22,9 @@ python-multipart==0.0.12  # 修复了文件上传的bug
 
 # logger配置
 loguru==0.7.2
+
+# slowapi 限流
+slowapi==0.1.9
+
+# 异步网络请求
+httpx

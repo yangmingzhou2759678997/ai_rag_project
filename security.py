@@ -3,7 +3,7 @@ import jwt
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
-# 导入我们的全局配置，用于读取密钥 (如果你此时还没建 config.py，先不用管，稍后我们会配)
+# 导入全局配置，用于读取密钥
 from config import settings
 from utils.logger import logger
 
