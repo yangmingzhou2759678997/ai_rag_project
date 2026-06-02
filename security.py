@@ -1,8 +1,13 @@
 import bcrypt
-import jwt
 from datetime import datetime, timedelta, timezone
 from typing import Optional
-
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from database import get_db
+from models import User
+import jwt  # 引入 jwt 用于解密
 # 导入全局配置，用于读取密钥
 from config import settings
 from utils.logger import logger
@@ -60,3 +65,39 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     )
 
     return encoded_jwt
+
+
+# ==========================================
+# 追加动作 4：全局身份安检员 (FastAPI 依赖注入)
+# 作用：被 chat.py 调用，拦截没有登录的用户，并从数据库捞出用户真实信息
+# ==========================================
+
+# 告诉 FastAPI，前端应该去哪里换取 Token
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login")
+
+
+async def get_current_user(
+        token: str = Depends(oauth2_scheme),
+        db: AsyncSession = Depends(get_db)
+):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="身份凭证无效或已过期，请重新登录",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        # 使用你图里的 jwt 库和配置，把前端传来的 Token 解密
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+    except Exception:
+        raise credentials_exception
+
+    # 去数据库查一下，这个用户是不是真的存在
+    result = await db.execute(select(User).where(User.username == username))
+    user = result.scalars().first()
+    if user is None:
+        raise credentials_exception
+
+    return user
