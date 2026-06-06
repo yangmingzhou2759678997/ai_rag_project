@@ -7,13 +7,10 @@ from fastapi import FastAPI
 from typing import AsyncGenerator
 from config import settings
 
-# ==========================================
-# 🚨 降级改造：去掉了资深架构师级别的高并发池化参数
-# 只保留了 pool_pre_ping=True，伪装成“踩过坑的新手”
-# ==========================================
+# 创建数据库引擎
 async_engine = create_async_engine(
     settings.DB_URL,
-    pool_pre_ping=True,  # 🎯 初级工程师的最佳亮点：心跳保活
+    pool_pre_ping=True,  # 心跳保活
     echo=False
 )
 

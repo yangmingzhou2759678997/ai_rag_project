@@ -1,82 +1,77 @@
-# 文件路径: clients/llm_client.py
-from openai import AsyncOpenAI
+# 覆盖替换文件路径: clients/llm_client.py
+from openai import AsyncOpenAI, pydantic_function_tool
+from openai.types.chat import ChatCompletionMessage
+from pydantic import BaseModel, Field
+
 from config import settings
 from utils.logger import logger
 import json
+from threading import Lock
+
+
+class OpenAIClient:
+    _instance: AsyncOpenAI | None = None
+    _lock: Lock = Lock()
+
+    def __new__(cls):
+        if cls._instance is None:
+            with cls._lock:
+                if cls._instance is None:
+                    try:
+                        cls._instance = AsyncOpenAI(
+                            api_key=settings.openai_api_key,
+                            base_url=settings.openai_base_url
+                        )
+                        logger.info(" 成功建立大模型云端异步连接客户端！")
+                    except Exception as e:
+                        logger.error(f" 大模型客户端初始化失败: {e}")
+                        raise e
+        return cls._instance
+
+
+llm_client = OpenAIClient()
+
 
 # ==========================================
-# 第一部分：初始化大模型客户端 (全局单例)
+# 第二部分：定义智能体的工具清单
 # ==========================================
-try:
-    llm_client = AsyncOpenAI(
-        api_key=settings.openai_api_key,
-        base_url=settings.openai_base_url
+class RAGToolArgs(BaseModel):
+    query: str = Field(..., description="提取出的需要进入外部数据库进行匹配的具体搜索词或完整问句。")
+
+
+class WeatherToolArgs(BaseModel):
+    city_name: str = Field(..., description="需要查询天气的城市名称。")
+
+
+rag_tool_schema = pydantic_function_tool(
+    model=RAGToolArgs,
+    name="search_knowledge_base",
+    description=(
+        "【企业通用数据检索器】这是你的核心外部记忆库。只要用户的提问超出了日常寒暄的范畴，"
+        "涉及到任何客观事实、机构规章、专业知识、业务数据等需要严谨依据的问题时，你绝不能使用自己预训练的知识去回答。"
+        "【必须且只能】静默调用此工具！绝对禁止试图用你自己的预训练知识去盲猜，也绝对禁止在调用前输出'好的，让我为您查询'等过渡性废话。"
     )
-    logger.info("✅ 成功建立大模型云端异步连接客户端！")
-except Exception as e:
-    logger.error(f"❌ 大模型客户端初始化失败: {e}")
-    raise e
+)
 
-# ==========================================
-# 第二部分：定义智能体的“武器清单” (Function Calling Schema)
-# ==========================================
-rag_tool_schema = {
-    "type": "function",
-    "function": {
-        "name": "search_knowledge_base",
-        "description": "当用户询问关于公司制度、设备维修、内部规章、财务报销、网络指南或任何需要查阅内部知识库的问题时，必须调用此工具。",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "query": {
-                    "type": "string",
-                    "description": "需要去知识库检索的具体问题。例如：'带薪年假有几天？'"
-                }
-            },
-            "required": ["query"]
-        }
-    }
-}
-
-weather_tool_schema = {
-    "type": "function",
-    "function": {
-        "name": "get_realtime_weather",
-        "description": "当用户询问某个城市今天、实时、现在的天气、温度或气候情况时，必须调用此工具。",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "city_name": {
-                    "type": "string",
-                    "description": "需要查询天气的具体城市名称，例如：'苏州'、'北京'"
-                }
-            },
-            "required": ["city_name"]
-        }
-    }
-}
+weather_tool_schema = pydantic_function_tool(
+    model=WeatherToolArgs,
+    name="get_realtime_weather",
+    description="用于查询指定城市的实时天气数据。"
+)
 
 agent_tools = [rag_tool_schema, weather_tool_schema]
 
 
 # ==========================================
-# 第三部分：解耦接口 A - 【补漏新增】独立问题重写 (强制 JSON Mode)
+# 🚨 核心修复 3：强力剥离 JSON Mode 的 Markdown 污染
 # ==========================================
 async def rewrite_user_query_json_mode(history_messages: list, current_query: str) -> str:
-    """
-    问题重写引擎 (JSON Mode)
-    作用：解决多轮对话中的“代词指代不明”问题。强制大模型返回 JSON，确保 100% 稳定解析。
-    """
-    logger.info("✍️ [LLM 重写层] 正在结合历史记忆，重写用户问题...")
-
-    # 1. 构造极其严苛的重写系统提示词
     system_prompt = (
-        "你是一个极其精准的语义重写专家。你的任务是结合用户的聊天记录，将用户的最新问题重写为一个独立、完整、不包含代词(如'他'、'这个')的陈述句提问。\n"
-        "如果最新问题已经是完整的，请保持原意返回。\n"
-        "🚨 极其重要：你必须且只能返回一个合法的 JSON 对象，格式必须完全遵守：{\"rewritten_query\": \"重写后的完整问题\"}"
+        "你是一个极其精准的语义重写专家。你的任务是结合用户的历史聊天记录，将用户的最新问题重写为一个独立、完整、不包含代词(如'他'、'这个')的陈述句提问。\n"
+        "如果最新问题已经是完整的，请保持原意然后返回。\n"
+        "极其重要：你必须且只能返回一个合法的 JSON 对象，格式必须完全遵守：{\"rewritten_query\": \"重写后的完整问题\"}这种样式。"
     )
 
-    # 2. 组装专门用于重写的消息体
     rewrite_messages = [{"role": "system", "content": system_prompt}]
     rewrite_messages.extend(history_messages)
     rewrite_messages.append({"role": "user", "content": f"最新问题是：{current_query}"})
@@ -85,13 +80,18 @@ async def rewrite_user_query_json_mode(history_messages: list, current_query: st
         response = await llm_client.chat.completions.create(
             model=settings.chat_model,
             messages=rewrite_messages,
-            temperature=0.1,  # 重写任务必须极度严谨，温度降到最低
-            # 🚨 解决暗伤二的终极绝杀：开启 OpenAI 官方 JSON Mode
+            temperature=0.1,
             response_format={"type": "json_object"}
         )
 
-        # 3. 解析 JSON 字符串拿到重写后的问题
-        json_str = response.choices[0].message.content
+        json_str = response.choices[0].message.content.strip()
+
+        # 🚨 治本修复：专门对付国内大模型（如 DeepSeek）乱加 Markdown 标签的恶习
+        if json_str.startswith("```json"):
+            json_str = json_str[7:-3].strip()
+        elif json_str.startswith("```"):
+            json_str = json_str[3:-3].strip()
+
         result_dict = json.loads(json_str)
         rewritten_query = result_dict.get("rewritten_query", current_query)
 
@@ -100,14 +100,10 @@ async def rewrite_user_query_json_mode(history_messages: list, current_query: st
 
     except Exception as e:
         logger.error(f"❌ [LLM 重写层] 问题重写失败，退回到原始问题兜底: {e}")
-        # 如果重写意外失败，不阻断流程，直接用原问题继续往下走
         return current_query
 
 
-# ==========================================
-# 第四部分：解耦接口 B - 非流式工具路由决策
-# ==========================================
-async def get_llm_decision(messages: list):
+async def get_llm_decision(messages: list) -> ChatCompletionMessage:
     try:
         response = await llm_client.chat.completions.create(
             model=settings.chat_model,
@@ -115,17 +111,30 @@ async def get_llm_decision(messages: list):
             temperature=settings.openai_temperature,
             stream=False,
             tools=agent_tools,
-            tool_choice="auto"
+            tool_choice="auto"  # 先让 LLM 自主判断，后续兜底
         )
-        return response.choices[0].message
+        decision_msg = response.choices[0].message
+
+        # 核心兜底：如果未触发任何工具，强制调用 search_knowledge_base
+        if not decision_msg.tool_calls:
+            logger.warning("⚠️ [LLM 决策层] 未触发工具，强制兜底调用 search_knowledge_base")
+            # 构造强制调用工具的消息
+            decision_msg.tool_calls = [
+                {
+                    "id": "forced_tool_call_001",
+                    "function": {
+                        "name": "search_knowledge_base",
+                        "arguments": json.dumps({"query": messages[-1]["content"]})  # 取最新用户问题作为查询词
+                    },
+                    "type": "function"
+                }
+            ]
+        return decision_msg
     except Exception as e:
         logger.error(f"❌ [LLM 决策层] 意图研判发生致命错误: {e}")
         raise e
 
 
-# ==========================================
-# 第五部分：解耦接口 C - 纯粹的流式打字机输出
-# ==========================================
 async def get_llm_stream_response(messages: list):
     try:
         response = await llm_client.chat.completions.create(

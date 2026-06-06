@@ -1,30 +1,16 @@
-# Web框架与服务器（2026年稳定版）
-fastapi==0.115.0  # 比0.110.0修复了大量安全漏洞，性能提升15%
-uvicorn[standard]==0.30.6  # 完整版包含uvloop和httptools，生产环境必备
-
-# 配置管理
-pydantic-settings==2.12.0  # 最新稳定版，支持.env文件加密
-
-# 数据库层（与你的环境完全匹配）
-sqlalchemy==2.0.39  # 你已经安装的版本，不要动！
-asyncpg==0.31.0  # 你已经安装的版本，不要动！
-pgvector==0.4.2  # 升级到0.4.2，支持HNSW索引的更多功能，与SQLAlchemy 2.0.39完美兼容
-
-# 大模型与RAG
-openai==1.35.10  # 最新稳定版，支持所有新模型和流式响应
-httpx==0.27.0  # 版本匹配，无需修改
-tenacity==8.5.0  # 升级到最新版，修复了重试逻辑的bug
-
-# 安全与认证
-pyjwt==2.9.0  # 修复了安全漏洞
-bcrypt==4.2.0  # 性能提升
-python-multipart==0.0.12  # 修复了文件上传的bug
-
-# logger配置
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+pydantic-settings==2.12.0
+sqlalchemy==2.0.39
+asyncpg==0.31.0
+pgvector==0.4.2
+openai==1.35.10
+httpx==0.27.0
+tenacity==8.5.0
+pyjwt==2.9.0
+bcrypt==4.2.0
+python-multipart==0.0.12
 loguru==0.7.2
-
-# slowapi 限流
 slowapi==0.1.9
-
-# 异步网络请求
-httpx
+httpx-sse==0.4.0
+streamlit==1.32.0

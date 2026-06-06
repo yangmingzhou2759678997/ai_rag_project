@@ -23,7 +23,7 @@ async def get_text_embedding(text: str) -> list[float]:
 
 async def search_knowledge_base(db: AsyncSession, query: str) -> str:
     """
-    工业级 RAG 检索工具：Query -> Vector Search (粗排) -> Rerank (精排) -> 降级兜底
+    工业级 RAG 检索工具：Query -> Vector Search (粗排) -> Rerank (精排) -> 弹性降级兜底
     """
     logger.info(f"🔎 [RAG工具] 开始检索内部知识库: '{query}'")
     try:
@@ -47,17 +47,20 @@ async def search_knowledge_base(db: AsyncSession, query: str) -> str:
             return "未找到相关内部资料。"
 
         # ==========================================
-        # 3. 精排阶段 (Rerank) 与 服务降级防御矩阵
+        # 3. 精排阶段 (Rerank) 与 弹性兜底机制
         # ==========================================
         logger.info(f"⚖️ [RAG工具] 粗排召回 {len(recall_chunks)} 条，开始重排...")
 
         try:
-            # 🚨 优化 1：使用 timeout=4.0 实现 Fail-Fast (快速失败)，绝不拖死主线程
+            # 护盾 1：防静默截断，截取每个文本块前350字符
+            safe_chunks = [chunk[:350] for chunk in recall_chunks]
+            safe_query = query[:100]
+
             async with httpx.AsyncClient() as client:
                 payload = {
                     "model": settings.reranker_model,
-                    "query": query,
-                    "texts": recall_chunks,
+                    "query": safe_query,
+                    "texts": safe_chunks,
                     "return_documents": True,
                     "top_n": settings.rerank_top_k
                 }
@@ -74,27 +77,38 @@ async def search_knowledge_base(db: AsyncSession, query: str) -> str:
                 res.raise_for_status()
                 rerank_data = res.json()
 
-            # 组装最终结果，过滤低分数据
+            # 解析结果
+            results = rerank_data.get("results", [])
             final_chunks = []
-            for item in rerank_data.get("results", []):
+
+            # 【尊重你的选择】：按照你设定的 0.25 (或 settings.rerank_score_threshold) 严格过滤
+            for item in results:
                 if item["relevance_score"] >= settings.rerank_score_threshold:
                     final_chunks.append(item["document"]["text"])
+
+            # 🚨【终极修复：弹性兜底机制】
+            # 如果所有的文本都被 0.25 误杀了，但 API 确实返回了排序后的结果
+            if not final_chunks and results:
+                highest_score = results[0]["relevance_score"]
+                logger.warning(
+                    f"⚠️ Reranker 过滤太严苛 (最高分仅 {highest_score:.3f}，低于阈值)。触发弹性兜底，强制将排名第一的文本喂给大模型！")
+                # 强行把第一名塞进去，让大模型自己去做阅读理解判断对错！
+                final_chunks.append(results[0]["document"]["text"])
 
             if not final_chunks:
                 return "检索到的资料相关性过低，不予参考。"
 
-            logger.info("✅ [RAG工具] 精排完成，资料已就绪。")
+            logger.info(f"✅ [RAG工具] 精排完成，最终采纳了 {len(final_chunks)} 条资料。")
             return "\n\n".join(final_chunks)
 
-        # 🚨 优化 2：捕获超时与网络异常，触发大厂级【服务降级】
         except httpx.TimeoutException:
-            logger.warning("⚠️ [RAG防御矩阵] Reranker 接口响应超时！已触发【服务降级】，直接返回粗排 Top-3 结果。")
+            logger.warning("⚠️ [RAG防御矩阵] Reranker 超时！降级返回粗排 Top-3。")
             return "\n\n".join(recall_chunks[:3])
 
         except Exception as e:
-            logger.warning(f"⚠️ [RAG防御矩阵] Reranker 发生异常: {e}。已触发【服务降级】，直接返回粗排 Top-3 结果。")
+            logger.warning(f"⚠️ [RAG防御矩阵] Reranker 发生异常: {e}。降级返回粗排 Top-3。")
             return "\n\n".join(recall_chunks[:3])
 
     except Exception as e:
-        logger.error(f"❌ [RAG工具] 检索知识库发生严重级崩溃: {e}")
+        logger.error(f"❌ [RAG工具] 检索发生严重级崩溃: {e}")
         return "内部知识库检索系统发生异常，暂无法提供资料。"

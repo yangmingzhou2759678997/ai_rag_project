@@ -38,12 +38,12 @@ async def save_message(db: AsyncSession, user_id: int, session_id: str, role: st
 
 
 # ==========================================
-# 核心功能 2：滑动窗口读取历史记录 (面试必考核心)
+# 核心功能 2：滑动窗口读取历史记录
 # ==========================================
 async def get_chat_history(db: AsyncSession, session_id: str, window_size: int = 10) -> list[dict]:
     """
     获取滑动窗口历史记录
-    作用：拉取最近的 N 条对话记录，喂给大模型，让它拥有记忆，同时防止 Token 超载。
+    作用：拉取最近的 10 条对话记录，喂给大模型，让它拥有记忆。
     """
     try:
         # 1. 构建查询语句：去 ChatMessage 表里找数据
@@ -86,3 +86,46 @@ async def get_chat_history(db: AsyncSession, session_id: str, window_size: int =
     except Exception as e:
         logger.error(f"❌ 拉取历史记录失败 [session_id: {session_id}]: {e}")
         return []
+
+
+
+
+# ==========================================
+# 核心功能 3：获取用户的所有历史会话列表 (修复多会话缺失)
+# ==========================================
+async def get_user_sessions(db: AsyncSession, user_id: int) -> list[str]:
+    """
+    作用：供前端侧边栏调用，列出该用户过去所有的对话 session_id。
+    """
+    try:
+        # 按时间倒序查询，保证最近聊过的会话排在最上面
+        stmt = (
+            select(ChatMessage.session_id)
+            .where(ChatMessage.user_id == user_id)
+            .order_by(ChatMessage.created_at.desc())
+        )
+        result = await db.execute(stmt)
+
+        # 使用 Python 的 dict.fromkeys 来实现去重，同时完美保留时间倒序的顺序
+        session_ids = list(dict.fromkeys(result.scalars().all()))
+        return session_ids
+    except Exception as e:
+        logger.error(f"❌ 拉取会话列表失败 [user_id: {user_id}]: {e}")
+
+
+# ==========================================
+# 核心功能 4：删除用户历史会话列表
+# ==========================================
+from sqlalchemy import delete
+
+# 新增：删除会话函数
+async def delete_session(db: AsyncSession, session_id: str, user_id: int):
+    """删除指定用户的指定会话及其所有消息"""
+    # 删除该会话的所有消息
+    await db.execute(
+        delete(ChatMessage)
+        .where(ChatMessage.session_id == session_id)
+        .where(ChatMessage.user_id == user_id)
+    )
+    await db.commit()
+    logger.info(f"🗑️ [内存服务] 成功删除会话 | 会话ID: {session_id} | 用户ID: {user_id}")

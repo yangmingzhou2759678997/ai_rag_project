@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     chunk_overlap: int = 50
     recall_top_k: int = 10
     rerank_top_k: int = 3
-    rerank_score_threshold: float = 0.5
+    rerank_score_threshold: float = 0.25
 
     # 4. Reranker 线上高性能重排接口配置
     reranker_api_url: str = "https://api.siliconflow.cn/v1/rerank"
@@ -53,9 +53,9 @@ class Settings(BaseSettings):
         return self.database_url
 
     # 7. 安全鉴权 JWT 配置
-    secret_key: str
-    algorithm: str = "HS256"
-    access_token_expire_minutes: int = 1440
+    SECRET_KEY: str  # 🚨 必须全大写
+    ALGORITHM: str = "HS256"  # 🚨 必须全大写
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
 
     # 8. 系统防御矩阵配置
     ratelimit_chat: str = "15/minute"

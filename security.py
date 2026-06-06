@@ -73,7 +73,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
 # ==========================================
 
 # 告诉 FastAPI，前端应该去哪里换取 Token
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 
 async def get_current_user(

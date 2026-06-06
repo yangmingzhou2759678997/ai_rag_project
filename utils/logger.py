@@ -26,7 +26,7 @@ FILE_FORMAT = "{time:YYYY-MM-DD HH:mm:ss.SSS} | {level: <8} | {name}:{function}:
 # ====================== 拦截系统原生日志 ======================
 class InterceptHandler(logging.Handler):
     """
-    拦截标准 logging，统一交给 loguru 处理 (这是官方文档里的标准写法，面试官绝不会怀疑)
+    拦截标准 logging，统一交给 loguru 处理 官方文档里的标准写法
     """
     def emit(self, record):
         try:

@@ -39,15 +39,13 @@ class Document (Base):
     id:Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     content: Mapped[str] = mapped_column(Text, nullable=False)
     embedding: Mapped[Vector] = mapped_column(Vector(1024), nullable=False)
-    metadata_info: Mapped[dict|None] = mapped_column(JSONB, nullable=False)
+    metadata_info: Mapped[dict|None] = mapped_column(JSONB, nullable=True)
     created_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.datetime.now(datetime.UTC))
 
 # ==========================================
 # 表 3：聊天记录表 (ChatMessage)
 # ==========================================
-# ==========================================
-# 表 3：聊天记录表 (ChatMessage)
-# ==========================================
+
 class ChatMessage(Base):
     __tablename__ = "chat_messages"
 
