@@ -61,3 +61,6 @@ data/
 *.pdf
 *.txt
 *.csv
+
+#8. 自己的
+study.py
