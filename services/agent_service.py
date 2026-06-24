@@ -23,7 +23,7 @@ async def process_chat_request(
 ):
     try:
         start_time = time.time()
-        logger.info(f"🧠 [Agent大脑] 收到对话 | 会话ID: {session_id} | 原始问题: {query}")
+        logger.info(f" [Agent大脑] 收到对话 | 会话ID: {session_id} | 原始问题: {query}")
 
         history_messages = await memory_service.get_chat_history(db, session_id, window_size=10)
         rewritten_query = await rewrite_user_query_json_mode(history_messages, query)
@@ -64,7 +64,7 @@ async def process_chat_request(
                     tool_calls.append(tc_dict)
                 else:
                     tool_calls.append(tc)
-            logger.info(f"🎯 [Agent大脑] 大模型触发工具调用，共 {len(tool_calls)} 个")
+            logger.info(f" [Agent大脑] 大模型触发工具调用，共 {len(tool_calls)} 个")
 
         # 第二步：代码级强制兜底（如果大模型没有调用工具且不是寒暄）
         if not tool_calls:
@@ -73,7 +73,7 @@ async def process_chat_request(
             is_greeting = rewritten_query.strip().lower() in greetings
 
             if not is_greeting:
-                logger.warning("⚠️ [Agent大脑] 大模型未触发RAG工具，触发代码级强制兜底！")
+                logger.warning(" [Agent大脑] 大模型未触发RAG工具，触发代码级强制兜底！")
                 # 手动构造标准字典格式的工具调用（100%兼容所有情况）
                 tool_calls = [
                     {
@@ -85,9 +85,9 @@ async def process_chat_request(
                         }
                     }
                 ]
-                logger.info(f"🎯 [Agent大脑] 强制触发工具调用，共 {len(tool_calls)} 个")
+                logger.info(f" [Agent大脑] 强制触发工具调用，共 {len(tool_calls)} 个")
             else:
-                logger.info("💬 [Agent大脑] 大模型判断为日常寒暄，直接回复...")
+                logger.info(" [Agent大脑] 大模型判断为日常寒暄，直接回复...")
 
         # 第三步：处理所有工具调用（纯字典操作，零类型问题）
         if tool_calls:
@@ -124,7 +124,7 @@ async def process_chat_request(
                     "content": tool_output
                 })
 
-            logger.info("🔗 [Agent大脑] 所有工具结果缝合完毕。")
+            logger.info(" [Agent大脑] 所有工具结果缝合完毕。")
 
         # 第四步：流式生成最终回答
         llm_stream = await get_llm_stream_response(final_messages)
@@ -166,5 +166,5 @@ async def process_chat_request(
         return response_generator()
 
     except Exception as e:
-        logger.error(f"❌ [Agent大脑] 智能体中枢崩溃: {e}", exc_info=True)
+        logger.error(f" [Agent大脑] 智能体中枢崩溃: {e}", exc_info=True)
         raise e

@@ -33,7 +33,7 @@ async def save_message(db: AsyncSession, user_id: int, session_id: str, role: st
     except Exception as e:
         # 5. 如果写入失败，必须回滚事务，防止数据库死锁，并记录日志
         await db.rollback()
-        logger.error(f"❌ 保存聊天记录失败 [session_id: {session_id}]: {e}")
+        logger.error(f" 保存聊天记录失败 [session_id: {session_id}]: {e}")
         raise e
 
 
@@ -67,7 +67,7 @@ async def get_chat_history(db: AsyncSession, session_id: str, window_size: int =
         if not recent_messages:
             return []
 
-        # 4. 🚨 核心算法：反转列表
+        # 4. 核心算法：反转列表
         # 大模型阅读历史记录的习惯和人类一样，必须是从旧到新（正序）。
         # 所以我们用 Python 的切片魔法 [::-1]，把 [10, 9, 8] 翻转成 [8, 9, 10]。
         ordered_messages = recent_messages[::-1]
@@ -84,7 +84,7 @@ async def get_chat_history(db: AsyncSession, session_id: str, window_size: int =
         return history_list
 
     except Exception as e:
-        logger.error(f"❌ 拉取历史记录失败 [session_id: {session_id}]: {e}")
+        logger.error(f" 拉取历史记录失败 [session_id: {session_id}]: {e}")
         return []
 
 
@@ -110,7 +110,7 @@ async def get_user_sessions(db: AsyncSession, user_id: int) -> list[str]:
         session_ids = list(dict.fromkeys(result.scalars().all()))
         return session_ids
     except Exception as e:
-        logger.error(f"❌ 拉取会话列表失败 [user_id: {user_id}]: {e}")
+        logger.error(f" 拉取会话列表失败 [user_id: {user_id}]: {e}")
 
 
 # ==========================================
@@ -128,4 +128,4 @@ async def delete_session(db: AsyncSession, session_id: str, user_id: int):
         .where(ChatMessage.user_id == user_id)
     )
     await db.commit()
-    logger.info(f"🗑️ [内存服务] 成功删除会话 | 会话ID: {session_id} | 用户ID: {user_id}")
+    logger.info(f" [内存服务] 成功删除会话 | 会话ID: {session_id} | 用户ID: {user_id}")

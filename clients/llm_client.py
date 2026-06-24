@@ -86,7 +86,7 @@ async def rewrite_user_query_json_mode(history_messages: list, current_query: st
 
         json_str = response.choices[0].message.content.strip()
 
-        # 🚨 治本修复：专门对付国内大模型（如 DeepSeek）乱加 Markdown 标签的恶习
+        #  防止 Markdown 标签
         if json_str.startswith("```json"):
             json_str = json_str[7:-3].strip()
         elif json_str.startswith("```"):
@@ -95,11 +95,11 @@ async def rewrite_user_query_json_mode(history_messages: list, current_query: st
         result_dict = json.loads(json_str)
         rewritten_query = result_dict.get("rewritten_query", current_query)
 
-        logger.info(f"✅ [LLM 重写层] 重写成功: '{current_query}' -> '{rewritten_query}'")
+        logger.info(f" [LLM 重写层] 重写成功: '{current_query}' -> '{rewritten_query}'")
         return rewritten_query
 
     except Exception as e:
-        logger.error(f"❌ [LLM 重写层] 问题重写失败，退回到原始问题兜底: {e}")
+        logger.error(f" [LLM 重写层] 问题重写失败，退回到原始问题兜底: {e}")
         return current_query
 
 
@@ -117,7 +117,7 @@ async def get_llm_decision(messages: list) -> ChatCompletionMessage:
 
         # 核心兜底：如果未触发任何工具，强制调用 search_knowledge_base
         if not decision_msg.tool_calls:
-            logger.warning("⚠️ [LLM 决策层] 未触发工具，强制兜底调用 search_knowledge_base")
+            logger.warning(" [LLM 决策层] 未触发工具，强制兜底调用 search_knowledge_base")
             # 构造强制调用工具的消息
             decision_msg.tool_calls = [
                 {
@@ -131,7 +131,7 @@ async def get_llm_decision(messages: list) -> ChatCompletionMessage:
             ]
         return decision_msg
     except Exception as e:
-        logger.error(f"❌ [LLM 决策层] 意图研判发生致命错误: {e}")
+        logger.error(f" [LLM 决策层] 意图研判发生致命错误: {e}")
         raise e
 
 
@@ -145,5 +145,5 @@ async def get_llm_stream_response(messages: list):
         )
         return response
     except Exception as e:
-        logger.error(f"❌ [LLM 生成层] 流式接口响应失败: {e}")
+        logger.error(f" [LLM 生成层] 流式接口响应失败: {e}")
         raise e

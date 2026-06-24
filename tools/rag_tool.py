@@ -17,7 +17,7 @@ async def get_text_embedding(text: str) -> list[float]:
         )
         return response.data[0].embedding
     except Exception as e:
-        logger.error(f"❌ 向量化转换失败: {e}")
+        logger.error(f" 向量化转换失败: {e}")
         raise e
 
 
@@ -25,7 +25,7 @@ async def search_knowledge_base(db: AsyncSession, query: str) -> str:
     """
     工业级 RAG 检索工具：Query -> Vector Search (粗排) -> Rerank (精排) -> 弹性降级兜底
     """
-    logger.info(f"🔎 [RAG工具] 开始检索内部知识库: '{query}'")
+    logger.info(f" [RAG工具] 开始检索内部知识库: '{query}'")
     try:
         # ==========================================
         # 1. 向量化问题
@@ -49,10 +49,10 @@ async def search_knowledge_base(db: AsyncSession, query: str) -> str:
         # ==========================================
         # 3. 精排阶段 (Rerank) 与 弹性兜底机制
         # ==========================================
-        logger.info(f"⚖️ [RAG工具] 粗排召回 {len(recall_chunks)} 条，开始重排...")
+        logger.info(f" [RAG工具] 粗排召回 {len(recall_chunks)} 条，开始重排...")
 
         try:
-            # 护盾 1：防静默截断，截取每个文本块前350字符
+            # 护盾 1：防静默截断，截取每个文本块前350个字符
             safe_chunks = [chunk[:350] for chunk in recall_chunks]
             safe_query = query[:100]
 
@@ -81,34 +81,37 @@ async def search_knowledge_base(db: AsyncSession, query: str) -> str:
             results = rerank_data.get("results", [])
             final_chunks = []
 
-            # 【尊重你的选择】：按照你设定的 0.25 (或 settings.rerank_score_threshold) 严格过滤
+            # 按照设定的 rerank_score_threshold 严格过滤
             for item in results:
                 if item["relevance_score"] >= settings.rerank_score_threshold:
-                    final_chunks.append(item["document"]["text"])
+                    document = item.get("document", {})
+                    text = document.get("text", "")
+                    if text:
+                        final_chunks.append(text)
 
-            # 🚨【终极修复：弹性兜底机制】
-            # 如果所有的文本都被 0.25 误杀了，但 API 确实返回了排序后的结果
+            # 弹性兜底机制
+            # 如果所有的文本都被分数阈值挡下了，但 API 确实返回了排序后的结果
             if not final_chunks and results:
                 highest_score = results[0]["relevance_score"]
                 logger.warning(
-                    f"⚠️ Reranker 过滤太严苛 (最高分仅 {highest_score:.3f}，低于阈值)。触发弹性兜底，强制将排名第一的文本喂给大模型！")
+                    f" Reranker 过滤太严苛 (最高分仅 {highest_score:.3f}，低于阈值)。触发弹性兜底，强制将排名第一的文本喂给大模型！")
                 # 强行把第一名塞进去，让大模型自己去做阅读理解判断对错！
                 final_chunks.append(results[0]["document"]["text"])
 
             if not final_chunks:
                 return "检索到的资料相关性过低，不予参考。"
 
-            logger.info(f"✅ [RAG工具] 精排完成，最终采纳了 {len(final_chunks)} 条资料。")
+            logger.info(f" [RAG工具] 精排完成，最终采纳了 {len(final_chunks)} 条资料。")
             return "\n\n".join(final_chunks)
 
         except httpx.TimeoutException:
-            logger.warning("⚠️ [RAG防御矩阵] Reranker 超时！降级返回粗排 Top-3。")
+            logger.warning(" [RAG防御矩阵] Reranker 超时！降级返回粗排 Top-3。")
             return "\n\n".join(recall_chunks[:3])
 
         except Exception as e:
-            logger.warning(f"⚠️ [RAG防御矩阵] Reranker 发生异常: {e}。降级返回粗排 Top-3。")
+            logger.warning(f"️ [RAG防御矩阵] Reranker 发生异常: {e}。降级返回粗排 Top-3。")
             return "\n\n".join(recall_chunks[:3])
 
     except Exception as e:
-        logger.error(f"❌ [RAG工具] 检索发生严重级崩溃: {e}")
+        logger.error(f" [RAG工具] 检索发生严重级崩溃: {e}")
         return "内部知识库检索系统发生异常，暂无法提供资料。"
