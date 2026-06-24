@@ -33,7 +33,7 @@
 - **异常处理**：全局异常捕获、参数校验异常、HTTP异常统一封装
 
 ### 前端界面
-- **交互界面**：Streamlit（轻量化Web前端，实现登录、会话管理、流式对话）
+- **交互界面**：HTML/CSS/JavaScript（Web前端，实现登录、会话管理、流式对话）
 
 ## 三、项目整体架构
 项目采用**分层模块化架构**，代码解耦、职责清晰，分为`路由层/服务层/工具层/数据层/通用工具层`，整体数据流如下：
@@ -116,7 +116,7 @@ ai_rag_project/
 ├── security.py               # 密码加密、JWT签发与校验
 ├── config.py                 # 全局配置（读取.env环境变量）
 ├── seed_db.py                # 知识库离线数据灌入脚本
-├── web_ui.py                 # Streamlit前端交互页面
+├── web_ui.html               # HTML/CSS/JavaScript前端交互页面
 ├── main.py                   # 项目入口、路由挂载、中间件、异常注册
 ├── .env                      # 环境变量配置文件（密钥、地址、参数）
 ├── requirements.txt          # 项目依赖清单
@@ -152,7 +152,7 @@ LOG_LEVEL=INFO
 OPENAI_API_KEY=你的大模型密钥
 OPENAI_BASE_URL=https://api.siliconflow.cn/v1
 CHAT_MODEL=deepseek-ai/DeepSeek-V3
-OPENAI_TEMPERATURE=0.1
+OPENAI_TEMPERATURE=0.2
 
 # RAG与向量配置
 EMBEDDING_MODEL=BAAI/bge-m3
@@ -161,7 +161,7 @@ CHUNK_SIZE=350
 CHUNK_OVERLAP=50
 RECALL_TOP_K=10
 RERANK_TOP_K=3
-RERANK_SCORE_THRESHOLD=0.1
+RERANK_SCORE_THRESHOLD=0.2
 
 # 重排模型配置
 RERANKER_API_URL=https://api.siliconflow.cn/v1/rerank
@@ -204,7 +204,7 @@ uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ### 方式2：启动前端交互页面（Streamlit）
 新开一个终端，保持后端服务运行状态，执行：
 ```bash
-streamlit run web_ui.py
+streamlit run web_ui.html
 ```
 默认自动打开浏览器前端页面，可完成**注册、登录、会话管理、对话交互**全流程操作。
 
