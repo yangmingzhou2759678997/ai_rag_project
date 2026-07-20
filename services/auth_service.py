@@ -4,8 +4,6 @@ from sqlalchemy import select
 from fastapi import HTTPException, status
 from models import User
 from schemas import UserCreate
-
-
 from security import get_password_hash, verify_password, create_access_token
 
 
@@ -51,11 +49,11 @@ async def authenticate_user(db: AsyncSession, username: str, password: str):
     2. 核对密码
     3. 签发 Token 门票
     """
-    # 1. 找人
+    # 1.找人
     result = await db.execute(select(User).where(User.username == username))
     user = result.scalars().first()
 
-    # 2. 调用你的截图代码：核对密码 (找不到人或者密码错，统统报用户名或密码错误，防黑客探测)
+    # 2.核对密码
     if not user or not verify_password(password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -63,7 +61,7 @@ async def authenticate_user(db: AsyncSession, username: str, password: str):
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # 3. 调用你的截图代码：签发 JWT 门票 (把用户名塞进 sub 字段)
+    # 3.签发 JWT 门票 (把用户名塞进 sub 字段)
     access_token = create_access_token(data={"sub": user.username})
 
     # 返回标准的 Token 格式

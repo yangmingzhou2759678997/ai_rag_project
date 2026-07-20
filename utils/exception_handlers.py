@@ -16,7 +16,7 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
     统一处理主动抛出的 HTTP 异常
     """
     logger.warning(
-        f"⚠️ [HTTP 异常拦截] {request.method} {request.url.path} | 状态码: {exc.status_code} | 原因: {exc.detail}")
+        f"️ [HTTP 异常拦截] {request.method} {request.url.path} | 状态码: {exc.status_code} | 原因: {exc.detail}")
     return JSONResponse(
         status_code=exc.status_code,
         content={
@@ -46,7 +46,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     # 将多个参数错误用分号拼接起来
     flat_error_msg = " ; ".join(error_messages)
 
-    logger.warning(f"🚫 [参数校验拦截] {request.method} {request.url.path} | 详情: {flat_error_msg}")
+    logger.warning(f" [参数校验拦截] {request.method} {request.url.path} | 详情: {flat_error_msg}")
 
     return JSONResponse(
         status_code=422,
@@ -66,8 +66,8 @@ async def global_exception_handler(request: Request, exc: Exception):
     全场最核心的安全兜底防线
     作用：绝对不把系统真实报错信息（可能包含敏感数据库密码/API_KEY）暴露给外网前端！
     """
-    # 1. 在后台日志里，用刺眼的红色打印完整的错误堆栈，方便我们排查
-    logger.error(f"❌ [系统致命崩溃] {request.method} {request.url.path} | 错误详情: {str(exc)}", exc_info=True)
+    # 1. 在后台日志里，用刺眼的红色打印完整的错误堆栈，方便排查
+    logger.error(f" [系统致命崩溃] {request.method} {request.url.path} | 错误详情: {str(exc)}", exc_info=True)
 
     # 2. 返回给前端的，永远只是一句温柔且安全的废话
     return JSONResponse(

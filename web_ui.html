@@ -142,6 +142,72 @@
             margin-top: auto;
         }
 
+        /* ========== 知识库管理区域 ========== */
+        .knowledge-panel {
+            padding-top: 12px;
+            border-top: 1px solid #d1d5db;
+        }
+
+        .knowledge-panel .section-title {
+            margin-top: 0;
+        }
+
+        .knowledge-file-input {
+            width: 100%;
+            margin-bottom: 10px;
+            font-size: 13px;
+            color: #374151;
+        }
+
+        .knowledge-list {
+            max-height: 180px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+        }
+
+        .knowledge-item {
+            padding: 9px 10px;
+            margin-bottom: 6px;
+            background-color: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+        }
+
+        .knowledge-file-name {
+            margin-bottom: 5px;
+            font-size: 13px;
+            color: #374151;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .knowledge-file-info {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: #9ca3af;
+            font-size: 12px;
+        }
+
+        .knowledge-delete-btn {
+            border: none;
+            background: none;
+            color: #dc2626;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .knowledge-delete-btn:hover {
+            color: #b91c1c;
+        }
+
+        .knowledge-tip {
+            min-height: 18px;
+            margin-bottom: 8px;
+            font-size: 12px;
+        }
+
         /* ========== 登录注册面板 ========== */
         .auth-panel {
             display: none;
@@ -450,11 +516,34 @@
         <div id="loggedPanel" style="display: none;">
             <div class="user-info">已登录：<span id="usernameText"></span></div>
             <button class="btn btn-primary" onclick="createNewSession()">➕ 新建会话</button>
-            
+
             <div class="section-title">历史会话</div>
             <button class="btn btn-secondary" onclick="loadSessionList()">🔄 刷新</button>
-            
+
             <div id="sessionList" class="session-list"></div>
+
+            <!-- 知识库管理区域 -->
+            <div class="knowledge-panel">
+                <div class="section-title">知识库管理</div>
+
+                <input
+                    type="file"
+                    id="knowledgeFileInput"
+                    class="knowledge-file-input"
+                    accept=".txt,.md,.pdf,.docx"
+                >
+
+                <button id="uploadKnowledgeBtn" class="btn btn-secondary" onclick="uploadKnowledgeFile()">
+                    📤 上传知识文件
+                </button>
+
+                <button class="btn btn-secondary" onclick="loadKnowledgeDocuments()">
+                    🔄 刷新文件列表
+                </button>
+
+                <div id="knowledgeTip" class="knowledge-tip"></div>
+                <div id="knowledgeList" class="knowledge-list"></div>
+            </div>
 
             <button class="btn btn-secondary logout-btn" onclick="handleLogout()">🚪 退出登录</button>
         </div>
@@ -474,10 +563,10 @@
         </div>
 
         <div class="input-area">
-            <input 
-                type="text" 
-                id="chatInput" 
-                class="chat-input" 
+            <input
+                type="text"
+                id="chatInput"
+                class="chat-input"
                 placeholder="输入你的问题..."
                 onkeydown="handleInputKeydown(event)"
             >
@@ -518,6 +607,7 @@
             if (state.token) {
                 showLoggedPanel();
                 loadSessionList();
+                loadKnowledgeDocuments();
             } else {
                 showAuthPanel();
             }
@@ -570,6 +660,7 @@
                 errorEl.style.display = "none";
                 showLoggedPanel();
                 loadSessionList();
+                loadKnowledgeDocuments();
             } catch (e) {
                 errorEl.textContent = e.message;
                 errorEl.style.display = "block";
@@ -630,8 +721,159 @@
             state.messages = [];
             localStorage.removeItem("token");
             localStorage.removeItem("username");
+
+            document.getElementById("knowledgeFileInput").value = "";
+            document.getElementById("knowledgeList").innerHTML = "";
+            document.getElementById("knowledgeTip").textContent = "";
+
             showAuthPanel();
             renderChatArea();
+        }
+
+        // ========== 知识库管理 ==========
+        async function loadKnowledgeDocuments() {
+            if (!state.token) return;
+
+            const listEl = document.getElementById("knowledgeList");
+            const tipEl = document.getElementById("knowledgeTip");
+
+            listEl.innerHTML = "<div style='text-align:center;color:#9ca3af;font-size:12px;'>加载中...</div>";
+
+            try {
+                const res = await fetch(`${BACKEND_BASE_URL}/api/knowledge/documents`, {
+                    headers: { "Authorization": `Bearer ${state.token}` }
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    throw new Error(data.detail || "获取知识库文件列表失败");
+                }
+
+                const fileList = data.data || [];
+
+                if (fileList.length === 0) {
+                    listEl.innerHTML = "<div style='text-align:center;color:#9ca3af;font-size:12px;'>暂无知识库文件</div>";
+                    return;
+                }
+
+                listEl.innerHTML = "";
+
+                fileList.forEach(fileInfo => {
+                    const item = document.createElement("div");
+                    item.className = "knowledge-item";
+
+                    const fileNameEl = document.createElement("div");
+                    fileNameEl.className = "knowledge-file-name";
+                    fileNameEl.title = fileInfo.file_name;
+                    fileNameEl.textContent = fileInfo.file_name;
+
+                    const fileInfoEl = document.createElement("div");
+                    fileInfoEl.className = "knowledge-file-info";
+
+                    const detailEl = document.createElement("span");
+                    detailEl.textContent = `${fileInfo.file_type.toUpperCase()} · ${fileInfo.chunk_count}个片段`;
+
+                    const deleteBtn = document.createElement("button");
+                    deleteBtn.className = "knowledge-delete-btn";
+                    deleteBtn.textContent = "删除";
+                    deleteBtn.onclick = () => deleteKnowledgeDocument(fileInfo.file_name);
+
+                    fileInfoEl.appendChild(detailEl);
+                    fileInfoEl.appendChild(deleteBtn);
+                    item.appendChild(fileNameEl);
+                    item.appendChild(fileInfoEl);
+                    listEl.appendChild(item);
+                });
+
+                tipEl.textContent = "";
+            } catch (e) {
+                listEl.innerHTML = "";
+                tipEl.textContent = e.message;
+                tipEl.className = "knowledge-tip error-tip";
+            }
+        }
+
+        async function uploadKnowledgeFile() {
+            const fileInput = document.getElementById("knowledgeFileInput");
+            const uploadBtn = document.getElementById("uploadKnowledgeBtn");
+            const tipEl = document.getElementById("knowledgeTip");
+
+            if (!state.token) {
+                tipEl.textContent = "请先登录";
+                tipEl.className = "knowledge-tip error-tip";
+                return;
+            }
+
+            if (fileInput.files.length === 0) {
+                tipEl.textContent = "请先选择需要上传的文件";
+                tipEl.className = "knowledge-tip error-tip";
+                return;
+            }
+
+            const selectedFile = fileInput.files[0];
+            const formData = new FormData();
+            formData.append("file", selectedFile);
+
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = "上传处理中...";
+            tipEl.textContent = "正在提取文本、切分并生成向量，请稍候";
+            tipEl.className = "knowledge-tip";
+
+            try {
+                const res = await fetch(`${BACKEND_BASE_URL}/api/knowledge/upload`, {
+                    method: "POST",
+                    headers: { "Authorization": `Bearer ${state.token}` },
+                    body: formData
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    throw new Error(data.detail || "文件上传失败");
+                }
+
+                const chunkCount = data.data ? data.data.chunk_count : 0;
+                tipEl.textContent = `上传成功，共生成${chunkCount}个知识片段`;
+                tipEl.className = "knowledge-tip success-tip";
+                fileInput.value = "";
+
+                await loadKnowledgeDocuments();
+            } catch (e) {
+                tipEl.textContent = e.message;
+                tipEl.className = "knowledge-tip error-tip";
+            } finally {
+                uploadBtn.disabled = false;
+                uploadBtn.textContent = "📤 上传知识文件";
+            }
+        }
+
+        async function deleteKnowledgeDocument(fileName) {
+            if (!confirm(`确定要删除知识文件“${fileName}”吗？`)) return;
+
+            const tipEl = document.getElementById("knowledgeTip");
+
+            try {
+                const encodedFileName = encodeURIComponent(fileName);
+                const res = await fetch(`${BACKEND_BASE_URL}/api/knowledge/documents/${encodedFileName}`, {
+                    method: "DELETE",
+                    headers: { "Authorization": `Bearer ${state.token}` }
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    throw new Error(data.detail || "文件删除失败");
+                }
+
+                tipEl.textContent = `已删除知识文件：${fileName}`;
+                tipEl.className = "knowledge-tip success-tip";
+
+                await loadKnowledgeDocuments();
+            } catch (e) {
+                tipEl.textContent = e.message;
+                tipEl.className = "knowledge-tip error-tip";
+            }
         }
 
         // ========== 会话管理 ==========

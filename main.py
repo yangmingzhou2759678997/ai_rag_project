@@ -13,7 +13,7 @@ from utils.exception_handlers import (
     global_exception_handler
 )
 from utils.logger import setup_logging, logger
-from routers import auth, chat
+from routers import auth, chat, knowledge
 import models
 # 1. 依然在最前端调用日志初始化，保证控制台有漂亮的彩色打印
 setup_logging()
@@ -51,9 +51,10 @@ app.add_middleware(
 # ======================
 # 🚨 核心挂载：将认证系统的路由接入主程序
 # ======================
-app.include_router(auth_router)
 # 挂载路由
+app.include_router(auth.router)
 app.include_router(chat.router)
+app.include_router(knowledge.router)
 # ====================== 常规接口 ======================
 @app.get("/")
 async def root():

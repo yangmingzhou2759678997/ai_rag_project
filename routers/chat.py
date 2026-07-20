@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, BackgroundTasks
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from services import memory_service
-# 导入你自己写的各个基建模块
+# 导入各个基建模块
 from database import get_db
 from security import get_current_user
 from schemas import ChatRequest
@@ -15,14 +15,13 @@ from utils.logger import logger
 # ==========================================
 router = APIRouter(prefix="/api/chat", tags=["AI对话模块"])
 
-
 # ==========================================
 # 核心接口：流式 AI 对话 (SSE)
 # ==========================================
 @router.post("/completions", summary="发起大模型流式对话")
 async def chat_endpoint(
         request: ChatRequest,
-        # 1. 🚀 关键修复：告诉 FastAPI，请给我准备一个后台任务篮子
+        # 1. 告诉 FastAPI，给我准备一个后台任务篮子
         background_tasks: BackgroundTasks,
 
         # 依赖注入 A：保安查岗
@@ -34,7 +33,7 @@ async def chat_endpoint(
     接收用户提问，返回大模型流式打字机响应 (Server-Sent Events)
     """
     # 记录入口日志
-    logger.info(f"📥 [路由层] 收到聊天请求 | 用户ID: {current_user.id} | 会话ID: {request.session_id}")
+    logger.info(f" [路由层] 收到聊天请求 | 用户ID: {current_user.id} | 会话ID: {request.session_id}")
     logger.debug(f"用户提问内容: {request.query}")
 
     # 2. 移交大脑：把刚才拿到的 background_tasks 篮子，连同问题一起递给大脑处理
@@ -43,7 +42,7 @@ async def chat_endpoint(
         user_id=current_user.id,
         session_id=request.session_id,
         query=request.query,
-        background_tasks=background_tasks  # 👈 递交后台任务筐
+        background_tasks=background_tasks  #  递交后台任务筐
     )
 
     # 3. 流式响应：用 StreamingResponse 包装生成器返回给前端
@@ -53,10 +52,8 @@ async def chat_endpoint(
     )
 
 
-
-
 # ==========================================
-# 补充接口 1：获取历史会话列表
+#  1：获取历史会话列表
 # ==========================================
 @router.get("/sessions", summary="获取用户的历史会话列表")
 async def get_sessions(
@@ -67,7 +64,7 @@ async def get_sessions(
     return {"code": 200, "data": sessions}
 
 # ==========================================
-# 补充接口 2：点击侧边栏会话时，拉取该会话的所有聊天记录回显
+#  2：点击侧边栏会话时，拉取该会话的所有聊天记录回显
 # ==========================================
 @router.get("/history/{session_id}", summary="获取特定会话的历史消息")
 async def get_history(

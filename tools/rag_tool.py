@@ -1,15 +1,17 @@
 # 文件路径: tools/rag_tool.py
+import os
 import httpx
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from models import Document
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from clients.llm_client import llm_client
-from utils.logger import logger
 from config import settings
+from models import Document
+from utils.logger import logger
 
 
 async def get_text_embedding(text: str) -> list[float]:
-    """调用云端大模型，将文本转换为 1024 维向量"""
+    """调用云端大模型，将文本转换为向量"""
     try:
         response = await llm_client.embeddings.create(
             model=settings.embedding_model,
@@ -23,9 +25,11 @@ async def get_text_embedding(text: str) -> list[float]:
 
 async def search_knowledge_base(db: AsyncSession, query: str) -> str:
     """
-    工业级 RAG 检索工具：Query -> Vector Search (粗排) -> Rerank (精排) -> 弹性降级兜底
+    RAG检索工具：
+    问题向量化 -> 向量粗排 -> Reranker精排 -> 返回正文和来源文件
     """
     logger.info(f" [RAG工具] 开始检索内部知识库: '{query}'")
+
     try:
         # ==========================================
         # 1. 向量化问题
@@ -33,70 +37,134 @@ async def search_knowledge_base(db: AsyncSession, query: str) -> str:
         query_vector = await get_text_embedding(query)
 
         # ==========================================
-        # 2. 粗排阶段 (Recall Top K)
+        # 2. 粗排阶段
         # ==========================================
         stmt = (
-            select(Document.content)
+            select(Document.content, Document.metadata_info)
             .order_by(Document.embedding.cosine_distance(query_vector))
-            .limit(settings.recall_top_k)  # 默认召回 10 条
+            .limit(settings.recall_top_k)
         )
-        result = await db.execute(stmt)
-        recall_chunks = result.scalars().all()
 
-        if not recall_chunks:
+        result = await db.execute(stmt)
+        recall_rows = result.all()
+
+        if not recall_rows:
             return "未找到相关内部资料。"
 
-        # ==========================================
-        # 3. 精排阶段 (Rerank) 与 弹性兜底机制
-        # ==========================================
-        logger.info(f" [RAG工具] 粗排召回 {len(recall_chunks)} 条，开始重排...")
+        recall_items = []
 
+        for content, metadata_info in recall_rows:
+            metadata_info = metadata_info or {}
+            source = metadata_info.get("source", "未知来源")
+            source_file_name = os.path.basename(source)
+
+            recall_items.append({
+                "content": content,
+                "source": source_file_name
+            })
+
+        logger.info(f" [RAG工具] 粗排召回 {len(recall_items)} 条，开始重排...")
+
+        # ==========================================
+        # 3. Reranker精排
+        # ==========================================
         try:
-            # 护盾 1：防静默截断，截取每个文本块前350个字符
-            safe_chunks = [chunk[:350] for chunk in recall_chunks]
+            safe_chunks = [item["content"][:350] for item in recall_items]
             safe_query = query[:100]
 
             async with httpx.AsyncClient() as client:
                 payload = {
                     "model": settings.reranker_model,
                     "query": safe_query,
-                    "texts": safe_chunks,
+                    "documents": safe_chunks,
                     "return_documents": True,
                     "top_n": settings.rerank_top_k
                 }
+
                 headers = {
                     "Authorization": f"Bearer {settings.reranker_api_key}",
                     "Content-Type": "application/json"
                 }
+
                 res = await client.post(
                     settings.reranker_api_url,
                     json=payload,
                     headers=headers,
                     timeout=4.0
                 )
+
                 res.raise_for_status()
                 rerank_data = res.json()
 
-            # 解析结果
             results = rerank_data.get("results", [])
             final_chunks = []
 
-            # 按照设定的 rerank_score_threshold 严格过滤
+            # ==========================================
+            # 4. 根据重排结果找回原始正文和来源
+            # ==========================================
             for item in results:
-                if item["relevance_score"] >= settings.rerank_score_threshold:
-                    document = item.get("document", {})
-                    text = document.get("text", "")
-                    if text:
-                        final_chunks.append(text)
+                relevance_score = item.get("relevance_score", 0)
 
-            # 弹性兜底机制
-            # 如果所有的文本都被分数阈值挡下了，但 API 确实返回了排序后的结果
+                if relevance_score < settings.rerank_score_threshold:
+                    continue
+
+                selected_item = None
+                result_index = item.get("index")
+
+                if isinstance(result_index, int) and 0 <= result_index < len(recall_items):
+                    selected_item = recall_items[result_index]
+
+                if not selected_item:
+                    document = item.get("document", {})
+                    rerank_text = document.get("text", "")
+
+                    for recall_item in recall_items:
+                        safe_text = recall_item["content"][:350]
+
+                        if safe_text == rerank_text:
+                            selected_item = recall_item
+                            break
+
+                if selected_item:
+                    final_chunks.append(
+                        f"【来源文件：{selected_item['source']}】\n"
+                        f"{selected_item['content']}"
+                    )
+
+            # ==========================================
+            # 5. 分数阈值过严时保留第一名
+            # ==========================================
             if not final_chunks and results:
-                highest_score = results[0]["relevance_score"]
+                highest_score = results[0].get("relevance_score", 0)
+
                 logger.warning(
-                    f" Reranker 过滤太严苛 (最高分仅 {highest_score:.3f}，低于阈值)。触发弹性兜底，强制将排名第一的文本喂给大模型！")
-                # 强行把第一名塞进去，让大模型自己去做阅读理解判断对错！
-                final_chunks.append(results[0]["document"]["text"])
+                    f" Reranker过滤太严苛 "
+                    f"(最高分仅{highest_score:.3f}，低于阈值)，触发弹性兜底。"
+                )
+
+                first_result = results[0]
+                first_item = None
+                first_index = first_result.get("index")
+
+                if isinstance(first_index, int) and 0 <= first_index < len(recall_items):
+                    first_item = recall_items[first_index]
+
+                if not first_item:
+                    document = first_result.get("document", {})
+                    rerank_text = document.get("text", "")
+
+                    for recall_item in recall_items:
+                        safe_text = recall_item["content"][:350]
+
+                        if safe_text == rerank_text:
+                            first_item = recall_item
+                            break
+
+                if first_item:
+                    final_chunks.append(
+                        f"【来源文件：{first_item['source']}】\n"
+                        f"{first_item['content']}"
+                    )
 
             if not final_chunks:
                 return "检索到的资料相关性过低，不予参考。"
@@ -104,14 +172,35 @@ async def search_knowledge_base(db: AsyncSession, query: str) -> str:
             logger.info(f" [RAG工具] 精排完成，最终采纳了 {len(final_chunks)} 条资料。")
             return "\n\n".join(final_chunks)
 
+        # ==========================================
+        # 6. Reranker异常时降级返回粗排Top-3
+        # ==========================================
         except httpx.TimeoutException:
-            logger.warning(" [RAG防御矩阵] Reranker 超时！降级返回粗排 Top-3。")
-            return "\n\n".join(recall_chunks[:3])
+            logger.warning(" [RAG防御矩阵] Reranker超时，降级返回粗排Top-3。")
+
+            fallback_chunks = []
+
+            for item in recall_items[:3]:
+                fallback_chunks.append(
+                    f"【来源文件：{item['source']}】\n"
+                    f"{item['content']}"
+                )
+
+            return "\n\n".join(fallback_chunks)
 
         except Exception as e:
-            logger.warning(f"️ [RAG防御矩阵] Reranker 发生异常: {e}。降级返回粗排 Top-3。")
-            return "\n\n".join(recall_chunks[:3])
+            logger.warning(f" [RAG防御矩阵] Reranker发生异常：{e}，降级返回粗排Top-3。")
+
+            fallback_chunks = []
+
+            for item in recall_items[:3]:
+                fallback_chunks.append(
+                    f"【来源文件：{item['source']}】\n"
+                    f"{item['content']}"
+                )
+
+            return "\n\n".join(fallback_chunks)
 
     except Exception as e:
-        logger.error(f" [RAG工具] 检索发生严重级崩溃: {e}")
+        logger.error(f" [RAG工具] 检索发生严重级崩溃：{e}", exc_info=True)
         return "内部知识库检索系统发生异常，暂无法提供资料。"

@@ -2,13 +2,13 @@
 from openai import AsyncOpenAI, pydantic_function_tool
 from openai.types.chat import ChatCompletionMessage
 from pydantic import BaseModel, Field
-
 from config import settings
 from utils.logger import logger
 import json
 from threading import Lock
 
 
+# 创建单例
 class OpenAIClient:
     _instance: AsyncOpenAI | None = None
     _lock: Lock = Lock()
@@ -58,12 +58,11 @@ weather_tool_schema = pydantic_function_tool(
     name="get_realtime_weather",
     description="用于查询指定城市的实时天气数据。"
 )
-
 agent_tools = [rag_tool_schema, weather_tool_schema]
 
 
 # ==========================================
-# 🚨 核心修复 3：强力剥离 JSON Mode 的 Markdown 污染
+#  3：强力剥离 JSON Mode 的 Markdown 污染
 # ==========================================
 async def rewrite_user_query_json_mode(history_messages: list, current_query: str) -> str:
     system_prompt = (
@@ -71,7 +70,6 @@ async def rewrite_user_query_json_mode(history_messages: list, current_query: st
         "如果最新问题已经是完整的，请保持原意然后返回。\n"
         "极其重要：你必须且只能返回一个合法的 JSON 对象，格式必须完全遵守：{\"rewritten_query\": \"重写后的完整问题\"}这种样式。"
     )
-
     rewrite_messages = [{"role": "system", "content": system_prompt}]
     rewrite_messages.extend(history_messages)
     rewrite_messages.append({"role": "user", "content": f"最新问题是：{current_query}"})
@@ -83,9 +81,7 @@ async def rewrite_user_query_json_mode(history_messages: list, current_query: st
             temperature=0.1,
             response_format={"type": "json_object"}
         )
-
         json_str = response.choices[0].message.content.strip()
-
         #  防止 Markdown 标签
         if json_str.startswith("```json"):
             json_str = json_str[7:-3].strip()
@@ -114,7 +110,6 @@ async def get_llm_decision(messages: list) -> ChatCompletionMessage:
             tool_choice="auto"  # 先让 LLM 自主判断，后续兜底
         )
         decision_msg = response.choices[0].message
-
         # 核心兜底：如果未触发任何工具，强制调用 search_knowledge_base
         if not decision_msg.tool_calls:
             logger.warning(" [LLM 决策层] 未触发工具，强制兜底调用 search_knowledge_base")
