@@ -60,10 +60,14 @@ async def search_knowledge_base(db: AsyncSession, query: str) -> str:
 
             recall_items.append({
                 "content": content,
-                "source": source_file_name
+                "source": source_file_name,
+                "chunk_index": metadata_info.get("chunk_index", -1)
             })
 
         logger.info(f" [RAG工具] 粗排召回 {len(recall_items)} 条，开始重排...")
+
+        for recall_rank, item in enumerate(recall_items, 1):
+            logger.info(f" [RAG粗排] 排名 {recall_rank} | 来源：{item['source']} | chunk_index：{item['chunk_index']} | 正文前120字符：{item['content'][:120]}")
 
         # ==========================================
         # 3. Reranker精排
@@ -98,6 +102,27 @@ async def search_knowledge_base(db: AsyncSession, query: str) -> str:
 
             results = rerank_data.get("results", [])
             final_chunks = []
+
+            for rerank_rank, item in enumerate(results, 1):
+                result_index = item.get("index")
+                log_item = None
+
+                if isinstance(result_index, int) and 0 <= result_index < len(recall_items):
+                    log_item = recall_items[result_index]
+
+                if not log_item:
+                    document = item.get("document") or {}
+                    rerank_text = document.get("text", "") if isinstance(document, dict) else ""
+
+                    for recall_item in recall_items:
+                        if recall_item["content"][:350] == rerank_text:
+                            log_item = recall_item
+                            break
+
+                log_source = log_item["source"] if log_item else "未知来源"
+                log_chunk_index = log_item["chunk_index"] if log_item else -1
+                log_content = log_item["content"][:120] if log_item else ""
+                logger.info(f" [RAG精排] 排名 {rerank_rank} | 原始index：{result_index} | relevance_score：{item.get('relevance_score', 0)} | 来源：{log_source} | chunk_index：{log_chunk_index} | 正文前120字符：{log_content}")
 
             # ==========================================
             # 4. 根据重排结果找回原始正文和来源

@@ -1,8 +1,13 @@
 # 文件路径: services/knowledge_service.py
 import os
+import re
 from io import BytesIO
 
 from docx import Document as WordDocument
+from docx.oxml.table import CT_Tbl
+from docx.oxml.text.paragraph import CT_P
+from docx.table import Table
+from docx.text.paragraph import Paragraph
 from pypdf import PdfReader
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,6 +17,111 @@ from models import Document
 from tools.rag_tool import get_text_embedding
 from utils.logger import logger
 from utils.text_splitter import split_text
+
+
+# ==========================================
+# DOCX顶层段落和表格提取
+# ==========================================
+def iter_docx_blocks(word_document):
+    """按照DOCX正文XML顺序依次返回顶层段落和表格"""
+    for child in word_document.element.body.iterchildren():
+        if isinstance(child, CT_P):
+            yield Paragraph(child, word_document)
+        elif isinstance(child, CT_Tbl):
+            yield Table(child, word_document)
+
+
+def get_docx_table_text(table):
+    """将表格转换为保留行列顺序的简单文本"""
+    row_text_list = []
+
+    for row in table.rows:
+        cell_text_list = [cell.text.strip() for cell in row.cells]
+
+        if any(cell_text_list):
+            row_text_list.append(" | ".join(cell_text_list))
+
+    if not row_text_list:
+        return ""
+
+    return "【表格】\n" + "\n".join(row_text_list)
+
+
+# ==========================================
+# DOCX章节标题识别与切分
+# ==========================================
+def get_docx_title_type(paragraph):
+    """识别阶段标题，以及第X天、章、节标题"""
+    text = paragraph.text.strip()
+    number_pattern = r"(?:\d+|[零〇一二三四五六七八九十百千两]+)"
+    title_match = re.match(rf"^第\s*{number_pattern}\s*(阶段|天|章|节)(?=\s*$|\s*[:：、.\-—]|\s+)", text)
+
+    if not title_match:
+        try:
+            style_name = paragraph.style.name if paragraph.style else ""
+        except KeyError:
+            style_name = ""
+
+        if "标题" in style_name or "heading" in style_name.lower():
+            title_match = re.match(rf"^第\s*{number_pattern}\s*(阶段|天|章|节)", text)
+
+    if not title_match:
+        return ""
+
+    return "stage" if title_match.group(1) == "阶段" else "section"
+
+
+def split_docx_by_sections(file_content: bytes, chunk_size: int, chunk_overlap: int):
+    """按DOCX章节边界切分正文，并让每个片段继承标题"""
+    word_document = WordDocument(BytesIO(file_content))
+    sections = []
+    current_stage_title = ""
+    current_section_title = ""
+    current_paragraphs = []
+    found_title = False
+
+    for block in iter_docx_blocks(word_document):
+        text = block.text.strip() if isinstance(block, Paragraph) else get_docx_table_text(block)
+
+        if not text:
+            continue
+
+        title_type = get_docx_title_type(block) if isinstance(block, Paragraph) else ""
+
+        if title_type:
+            found_title = True
+
+            if current_paragraphs:
+                sections.append((current_stage_title, current_section_title, current_paragraphs))
+                current_paragraphs = []
+
+            if title_type == "stage":
+                current_stage_title = text
+                current_section_title = ""
+            else:
+                current_section_title = text
+        else:
+            current_paragraphs.append(text)
+
+    if current_paragraphs:
+        sections.append((current_stage_title, current_section_title, current_paragraphs))
+
+    if not found_title:
+        return None
+
+    section_chunks = []
+
+    for stage_title, section_title, paragraphs in sections:
+        body_text = "\n\n".join(paragraphs)
+        body_chunks = split_text(text=body_text, chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+        title_text = "\n".join(title for title in (stage_title, section_title) if title)
+
+        # chunk_size只控制章节正文大小，标题在切分后附加为检索上下文
+        for chunk in body_chunks:
+            content = f"{title_text}\n{chunk}" if title_text else chunk
+            section_chunks.append({"content": content, "stage_title": stage_title, "section_title": section_title})
+
+    return section_chunks
 
 
 # ==========================================
@@ -48,16 +158,18 @@ def extract_file_text(file_name: str, file_content: bytes):
 
         return "\n\n".join(page_text_list)
 
-    # DOCX按段落提取文字
+    # DOCX按原始顺序提取顶层段落和表格
     if file_extension == ".docx":
         word_document = WordDocument(BytesIO(file_content))
-        paragraph_list = []
+        content_list = []
 
-        for paragraph in word_document.paragraphs:
-            if paragraph.text.strip():
-                paragraph_list.append(paragraph.text.strip())
+        for block in iter_docx_blocks(word_document):
+            text = block.text.strip() if isinstance(block, Paragraph) else get_docx_table_text(block)
 
-        return "\n\n".join(paragraph_list)
+            if text:
+                content_list.append(text)
+
+        return "\n\n".join(content_list)
 
     raise ValueError(
         "当前只支持txt、md、pdf、docx文件"
@@ -148,12 +260,15 @@ async def save_knowledge_file(
             "没有从文件中提取到有效文本"
         )
 
-    # 第四步：复用原项目的文本切分函数
-    text_chunks = split_text(
-        text=raw_text,
-        chunk_size=settings.chunk_size,
-        chunk_overlap=settings.chunk_overlap
-    )
+    # 第四步：DOCX优先按章节切分，未识别到标题时回退原来的普通切分
+    section_chunks = split_docx_by_sections(file_content, settings.chunk_size, settings.chunk_overlap) if file_extension == "docx" else None
+
+    if section_chunks:
+        text_chunks = [item["content"] for item in section_chunks]
+        chunk_titles = [{"stage_title": item["stage_title"], "section_title": item["section_title"]} for item in section_chunks]
+    else:
+        text_chunks = split_text(text=raw_text, chunk_size=settings.chunk_size, chunk_overlap=settings.chunk_overlap)
+        chunk_titles = [{"stage_title": "", "section_title": ""} for _ in text_chunks]
 
     if not text_chunks:
         raise ValueError(
@@ -181,14 +296,19 @@ async def save_knowledge_file(
 
             embedding_vector = await get_text_embedding(chunk)
 
+            metadata_info = {
+                "source": safe_file_name,
+                "file_type": file_extension,
+                "chunk_index": index
+            }
+
+            if file_extension == "docx":
+                metadata_info.update(chunk_titles[index])
+
             new_document = Document(
                 content=chunk,
                 embedding=embedding_vector,
-                metadata_info={
-                    "source": safe_file_name,
-                    "file_type": file_extension,
-                    "chunk_index": index
-                }
+                metadata_info=metadata_info
             )
 
             db.add(new_document)
