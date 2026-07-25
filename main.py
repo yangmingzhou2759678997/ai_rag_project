@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from openai import RateLimitError
 from slowapi.errors import RateLimitExceeded
 from slowapi import _rate_limit_exceeded_handler
 from utils.rate_limiter import limiter
@@ -10,6 +11,7 @@ from database import lifespan
 from utils.exception_handlers import (
     http_exception_handler,
     validation_exception_handler,
+    upstream_rate_limit_exception_handler,
     global_exception_handler
 )
 from utils.logger import setup_logging, logger
@@ -35,7 +37,9 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_exception_handler(StarletteHTTPException, http_exception_handler)
 # 3. 挂载 Pydantic 数据校验报错 422
 app.add_exception_handler(RequestValidationError, validation_exception_handler)
-# 4. 挂载终极未知崩溃 500
+# 4. 挂载上游大模型限流报错 503
+app.add_exception_handler(RateLimitError, upstream_rate_limit_exception_handler)
+# 5. 挂载终极未知崩溃 500
 app.add_exception_handler(Exception, global_exception_handler)
 # =================================================================
 

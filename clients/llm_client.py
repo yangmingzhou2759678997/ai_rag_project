@@ -67,7 +67,14 @@ agent_tools = [rag_tool_schema, weather_tool_schema]
 async def rewrite_user_query_json_mode(history_messages: list, current_query: str) -> str:
     system_prompt = (
         "你是一个极其精准的语义重写专家。你的任务是结合用户的历史聊天记录，将用户的最新问题重写为一个独立、完整、不包含代词(如'他'、'这个')的陈述句提问。\n"
-        "如果最新问题已经是完整的，请保持原意然后返回。\n"
+        "重写只负责补全省略的实体、文件、阶段、日期、章节和代词，不得添加其他问题。\n"
+        "最新问题实际询问的属性、动作和目标拥有最高优先级，历史消息只用于补全上下文。\n"
+        "禁止因为历史问题询问配置、时间、位置、人员等，就机械地把同一个询问属性带入最新问题。\n"
+        "当最新问题使用“那下一天”“同名第五天”“后一个阶段”等表达时，应结合历史补全目标，但不得改变最新问题原本的询问意图。\n"
+        "当最新问题只包含“那……呢”“后一个呢”“下一阶段呢”等目标切换表达，且没有明确重复上一轮询问的属性、动作或目标时，只补全新的目标，并使用“该目标的相关规定是什么”或“该目标具体如何处理”等中性问法；禁止自动继承上一轮的“什么配置、多少时间、放在哪里、由谁负责”等询问属性。\n"
+        "例如上一轮询问某阶段的配置、最新问题仅切换到另一个阶段时，应重写为另一个阶段的相关规定是什么，而不是继续询问配置。\n"
+        "必须保留用户明确给出的文件类型、文件名、阶段、天数、章节和顺序限制。\n"
+        "如果最新问题已经完整，请保持原意，不扩展出额外问题。\n"
         "极其重要：你必须且只能返回一个合法的 JSON 对象，格式必须完全遵守：{\"rewritten_query\": \"重写后的完整问题\"}这种样式。"
     )
     rewrite_messages = [{"role": "system", "content": system_prompt}]
@@ -78,7 +85,7 @@ async def rewrite_user_query_json_mode(history_messages: list, current_query: st
         response = await llm_client.chat.completions.create(
             model=settings.chat_model,
             messages=rewrite_messages,
-            temperature=0.1,
+            temperature=0,
             response_format={"type": "json_object"}
         )
         json_str = response.choices[0].message.content.strip()

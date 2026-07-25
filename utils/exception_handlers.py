@@ -1,11 +1,23 @@
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
+from openai import RateLimitError
 from starlette.exceptions import HTTPException as StarletteHTTPException
-from starlette.status import HTTP_500_INTERNAL_SERVER_ERROR
+from starlette.status import HTTP_500_INTERNAL_SERVER_ERROR, HTTP_503_SERVICE_UNAVAILABLE
 
 # 🚨 完美联动：导入我们之前写好的全链路日志！
 from utils.logger import logger
+
+
+# ======================
+# 拦截上游大模型服务限流
+# ======================
+async def upstream_rate_limit_exception_handler(request: Request, exc: RateLimitError):
+    logger.warning(" [上游模型限流] {} {} | 上游模型服务繁忙", request.method, request.url.path)
+    return JSONResponse(
+        status_code=HTTP_503_SERVICE_UNAVAILABLE,
+        content={"code": 503, "msg": "大模型服务繁忙，请稍后再试", "data": None}
+    )
 
 
 # ======================
@@ -67,7 +79,7 @@ async def global_exception_handler(request: Request, exc: Exception):
     作用：绝对不把系统真实报错信息（可能包含敏感数据库密码/API_KEY）暴露给外网前端！
     """
     # 1. 在后台日志里，用刺眼的红色打印完整的错误堆栈，方便排查
-    logger.error(f" [系统致命崩溃] {request.method} {request.url.path} | 错误详情: {str(exc)}", exc_info=True)
+    logger.opt(exception=exc).error(" [系统致命崩溃] {} {} | 错误详情: {}", request.method, request.url.path, exc)
 
     # 2. 返回给前端的，永远只是一句温柔且安全的废话
     return JSONResponse(

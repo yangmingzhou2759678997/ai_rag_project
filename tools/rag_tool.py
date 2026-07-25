@@ -1,5 +1,6 @@
 # 文件路径: tools/rag_tool.py
 import os
+import re
 import httpx
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,6 +9,18 @@ from clients.llm_client import llm_client
 from config import settings
 from models import Document
 from utils.logger import logger
+
+
+def get_query_file_type(query: str) -> str:
+    """查询只明确提到一种文件类型时返回metadata值"""
+    patterns = {
+        "txt": r"(?<![a-z0-9])txt(?![a-z0-9])",
+        "md": r"(?<![a-z0-9])(?:markdown|md)(?![a-z0-9])",
+        "docx": r"(?<![a-z0-9])(?:docx|word)(?![a-z0-9])",
+        "pdf": r"(?<![a-z0-9])pdf(?![a-z0-9])"
+    }
+    matched_types = [file_type for file_type, pattern in patterns.items() if re.search(pattern, query, re.IGNORECASE)]
+    return matched_types[0] if len(matched_types) == 1 else ""
 
 
 async def get_text_embedding(text: str) -> list[float]:
@@ -45,8 +58,20 @@ async def search_knowledge_base(db: AsyncSession, query: str) -> str:
             .limit(settings.recall_top_k)
         )
 
-        result = await db.execute(stmt)
-        recall_rows = result.all()
+        file_type = get_query_file_type(query)
+
+        if file_type:
+            logger.info(f" [RAG工具] 启用文件类型过滤：{file_type}")
+            result = await db.execute(stmt.where(Document.metadata_info["file_type"].astext == file_type))
+            recall_rows = result.all()
+
+            if not recall_rows:
+                logger.warning(" [RAG工具] 文件类型过滤未召回资料，回退全库检索。")
+                result = await db.execute(stmt)
+                recall_rows = result.all()
+        else:
+            result = await db.execute(stmt)
+            recall_rows = result.all()
 
         if not recall_rows:
             return "未找到相关内部资料。"
