@@ -1,0 +1,255 @@
+﻿run_id,question_id,category,file_format,repeat_index,session_id,question,expected_sources,should_refuse,http_status,answer,returned_sources,required_keyword_coverage,missing_required_keywords,forbidden_keywords_found,source_pass,refusal_pass,total_ms,manual_correctness,manual_completeness,manual_confusion,manual_notes,error,tested_at
+2717d252-7d28-4475-a86e-cf62af5c8c76,Q001,五种文件唯一事实,txt,1,c4aedeb3-2da8-4bc0-ae79-8c1e932f12be,紫色工单关闭前需要哪两类人员完成什么操作？,rag_eval_basic.txt,false,200,"紫色工单关闭前需要由客服主管和合规专员完成双签。
+
+参考来源：rag_eval_basic.txt",rag_eval_basic.txt,1.0000,,,true,,6644.62,,,,,,2026-07-24T18:40:18+08:00
+2717d252-7d28-4475-a86e-cf62af5c8c76,Q002,五种文件唯一事实,txt,1,6f199f07-311d-4d61-92b1-55352e57169d,北辰夜班纸质交接记录存在哪里并保存多久？,rag_eval_basic.txt,false,200,"北辰夜班纸质交接记录统一保存在C-19柜，保存期限为93天。
+
+参考来源：rag_eval_basic.txt",rag_eval_basic.txt,1.0000,,,true,,7498.49,,,,,,2026-07-24T18:40:25+08:00
+2717d252-7d28-4475-a86e-cf62af5c8c76,Q003,五种文件唯一事实,md,1,da2fc798-4ccf-49cf-b109-6e03472bad70,云帆正式版本必须通过哪个通道发布？,rag_eval_technical.md,false,200,"云帆正式版本必须通过“青羽通道”发布。
+
+参考来源：rag_eval_technical.md",rag_eval_technical.md,1.0000,,,true,,5972.51,,,,,,2026-07-24T18:40:31+08:00
+2717d252-7d28-4475-a86e-cf62af5c8c76,Q004,五种文件唯一事实,md,1,c0f3dc78-ec6c-4013-8ff9-3cc0b5059250,云帆回滚完成后的最终复核由哪个组负责？,rag_eval_technical.md,false,200,"云帆回滚完成后的最终复核由白鲸组负责。
+
+参考来源：rag_eval_technical.md",rag_eval_technical.md,1.0000,,,true,,6734.16,,,,,,2026-07-24T18:40:38+08:00
+2717d252-7d28-4475-a86e-cf62af5c8c76,Q005,五种文件唯一事实,docx,1,a229925e-86db-4e52-8582-642119205e51,普通DOCX中异常记录必须写入什么校验词？,rag_eval_normal.docx,false,200,"普通DOCX中异常记录必须写入梅花校验词。
+
+参考来源：rag_eval_normal.docx",rag_eval_normal.docx,1.0000,,,true,,6338.17,,,,,,2026-07-24T18:40:44+08:00
+2717d252-7d28-4475-a86e-cf62af5c8c76,Q006,五种文件唯一事实,docx,1,f5f528e9-4294-4ec9-b929-4d3bfcfdb87a,普通DOCX最终归档批次进入哪个目录并保留多久？,rag_eval_normal.docx,false,200,"普通DOCX最终归档批次进入N-42目录并保留146天。
+
+参考来源：rag_eval_normal.docx",rag_eval_normal.docx,1.0000,,,true,,6366.35,,,,,,2026-07-24T18:40:51+08:00
+2717d252-7d28-4475-a86e-cf62af5c8c76,Q007,五种文件唯一事实,docx_table,1,3b76ed0a-c0b8-44fe-8ec9-5e8ff6ac6720,表格DOCX的容器发布必须走哪个通道？,rag_eval_table.docx,false,200,"表格DOCX的容器发布必须走银杏通道。
+
+参考来源：rag_eval_table.docx",rag_eval_table.docx,1.0000,,,true,,6015.81,,,,,,2026-07-24T18:40:57+08:00
+2717d252-7d28-4475-a86e-cf62af5c8c76,Q008,五种文件唯一事实,docx_table,1,78d8a277-74cd-471f-ab01-7370525d729a,表格DOCX的值守密钥最终封存在哪里？,rag_eval_table.docx,false,200,"表格DOCX的值守密钥最终封存在D-08柜。
+
+参考来源：
+rag_eval_table.docx",rag_eval_table.docx,1.0000,,,true,,6024.97,,,,,,2026-07-24T18:41:03+08:00
+2717d252-7d28-4475-a86e-cf62af5c8c76,Q009,五种文件唯一事实,pdf,1,01a3880b-fc12-43be-b716-6e85fc7cffa3,远岚机房湿度告警阈值是多少？,rag_eval_pages.pdf,false,200,"远岚机房湿度告警阈值是71%。
+
+参考来源：rag_eval_pages.pdf",rag_eval_pages.pdf,1.0000,,,true,,10175.7,,,,,,2026-07-24T18:41:13+08:00
+2717d252-7d28-4475-a86e-cf62af5c8c76,Q010,五种文件唯一事实,pdf,1,159d3bba-61af-4f32-b1d7-a222b72a802d,远岚演练恢复检查由哪个组负责？,rag_eval_pages.pdf,false,200,"远岚演练恢复检查由松塔小组负责。
+
+参考来源：rag_eval_pages.pdf",rag_eval_pages.pdf,1.0000,,,true,,6523.2,,,,,,2026-07-24T18:41:20+08:00
+2717d252-7d28-4475-a86e-cf62af5c8c76,Q011,精确数字编号代码命令,txt,1,99a81a1b-776d-4d8e-b815-70a65157b38c,紫色工单的精确编号和首次响应时限分别是什么？,rag_eval_basic.txt,false,200,"紫色工单的精确编号为TXT-SLA-2048，首次响应时间必须控制在18分钟以内。
+
+参考来源：rag_eval_basic.txt",rag_eval_basic.txt,1.0000,,,true,,6697.33,,,,,,2026-07-24T18:41:26+08:00
+2717d252-7d28-4475-a86e-cf62af5c8c76,Q012,精确数字编号代码命令,md,1,b5cb00bb-1b98-4707-bd64-ccd0dbbb378c,云帆平台启动服务使用的完整命令是什么？,rag_eval_technical.md,false,200,"云帆平台启动服务使用的完整命令是：
+```bash
+python -m uvicorn main:app --host 127.0.0.1 --port 8123
+```
+
+参考来源：
+- rag_eval_technical.md",rag_eval_technical.md,1.0000,,,true,,7312.72,,,,,,2026-07-24T18:41:34+08:00
+2717d252-7d28-4475-a86e-cf62af5c8c76,Q013,精确数字编号代码命令,md,1,33c76caf-28d2-4bdb-979d-4e93a151bc27,云帆发布记录要求的重试配置值是什么？,rag_eval_technical.md,false,200,"云帆发布记录要求的重试配置值是 `RETRY_LIMIT=4`。
+
+参考来源：rag_eval_technical.md",rag_eval_technical.md,1.0000,,,true,,28192.86,,,,,,2026-07-24T18:42:02+08:00
+2717d252-7d28-4475-a86e-cf62af5c8c76,Q014,精确数字编号代码命令,docx,1,2fceef6f-ac0c-48dc-9d76-f2d9d032452b,第一阶段第5天使用的批量大小配置是什么？,rag_eval_normal.docx,false,200,"第一阶段第5天使用的批量大小配置是DOCX_BATCH_SIZE=48。
+
+参考来源：rag_eval_normal.docx",rag_eval_normal.docx,1.0000,,,true,,7540.88,,,,,,2026-07-24T18:42:09+08:00
+2717d252-7d28-4475-a86e-cf62af5c8c76,Q015,精确数字编号代码命令,docx_table,1,9fbe21d9-06a4-42f1-b892-ec874ac18c0a,表格DOCX中启动API服务的命令是什么？,rag_eval_table.docx,false,200,"在表格DOCX中启动API服务的命令是：`docker compose up -d`。
+
+参考来源：rag_eval_table.docx",rag_eval_table.docx,1.0000,,,true,,6715.53,,,,,,2026-07-24T18:42:16+08:00
+2717d252-7d28-4475-a86e-cf62af5c8c76,Q016,精确数字编号代码命令,pdf,1,8cfe42ab-0f18-4ad9-8d8f-e727dad44250,远岚平台的例行维护窗口是什么时间？,rag_eval_pages.pdf,false,200,"远岚平台的例行维护窗口为03:10-03:55。
+
+参考来源：rag_eval_pages.pdf",rag_eval_pages.pdf,1.0000,,,true,,7296.36,,,,,,2026-07-24T18:42:23+08:00
+2717d252-7d28-4475-a86e-cf62af5c8c76,Q017,完整章节与跨Chunk,txt,1,75ae515d-efea-48e5-a4e6-c9e693b7c9f5,紫色工单从受理到关闭需要完成哪些关键动作？,rag_eval_basic.txt,false,200,"紫色工单从受理到关闭需要完成以下关键动作：
+1. 受理时核对客户编号、发生时间、影响范围和当前联系人，确认信息完整后填写受理时间
+2. 当班负责人检查问题是否影响多个业务区域，如影响范围扩大需详细记录现场现象、已执行操作和未确认事项
+3. 交接前再次联系业务负责人确认最新状态，并标记已验证无效的方法
+4. 接班人员需从头阅读工单记录，复述当前故障、剩余风险和下一步动作，由交班人员确认复述准确性
+5. 涉及配置变更时需记录变更前后的值、执行人员和回退条件
+6. 客户补充的新信息需放入同一工单
+7. 问题恢复后需观察确认监控指标稳定、客户正常使用且无新告警
+8. 最后由客服主管检查时间线，合规专员检查记录必要字段，完成双签后才能关闭
+
+参考来源：rag_eval_basic.txt",rag_eval_basic.txt,1.0000,,,true,,12448.23,,,,,,2026-07-24T18:42:36+08:00
+2717d252-7d28-4475-a86e-cf62af5c8c76,Q017,完整章节与跨Chunk,txt,2,c07088e5-ee61-4d33-9adb-915745d485fe,紫色工单从受理到关闭需要完成哪些关键动作？,rag_eval_basic.txt,false,200,"紫色工单从受理到关闭需要完成以下关键动作：
+1. 受理时核对客户编号、发生时间、影响范围和当前联系人，确认信息完整后填写受理时间
+2. 当班负责人检查问题影响范围，如范围扩大需详细记录现场现象、已执行操作和未确认事项
+3. 交接前再次联系业务负责人确认最新状态，并标记已验证无效的方法
+4. 接班人员需从头阅读工单记录，复述当前故障、剩余风险和下一步动作，由交班人员确认准确性
+5. 涉及配置变更时需记录变更前后的值、执行人员和回退条件
+6. 客户补充信息需放入同一工单
+7. 问题恢复后需观察确认监控指标稳定、客户正常使用且无新告警
+8. 最后由客服主管检查时间线，合规专员检查记录必要字段，完成双签后才能关闭
+
+参考来源：
+rag_eval_basic.txt",rag_eval_basic.txt,1.0000,,,true,,24849.45,,,,,,2026-07-24T18:43:01+08:00
+2717d252-7d28-4475-a86e-cf62af5c8c76,Q017,完整章节与跨Chunk,txt,3,a6039d37-9396-4158-9818-bf92a29b1473,紫色工单从受理到关闭需要完成哪些关键动作？,rag_eval_basic.txt,false,200,"紫色工单从受理到关闭需要完成以下关键动作：
+1. 受理时核对客户编号、发生时间、影响范围和当前联系人
+2. 当班负责人检查问题是否影响多个业务区域
+3. 记录现场现象、已执行操作和尚未确认事项
+4. 交接前再次联系业务负责人确认最新状态
+5. 标记已验证无效的方法防止重复操作
+6. 接班人员需复述当前故障、剩余风险和下一步动作
+7. 涉及配置变更时记录变更前后的值、执行人员和回退条件
+8. 客户补充信息需放入同一工单
+9. 问题恢复后需观察确认监控指标稳定
+10. 最后由客服主管和合规专员完成双签才能关闭
+
+参考来源：
+rag_eval_basic.txt",rag_eval_basic.txt,1.0000,,,true,,13314.72,,,,,,2026-07-24T18:43:14+08:00
+2717d252-7d28-4475-a86e-cf62af5c8c76,Q018,完整章节与跨Chunk,md,1,daff3c9d-1135-4f3a-a663-d2eac11a0120,云帆发布从准备到最终复核的完整流程是什么？,rag_eval_technical.md,false,200,"云帆发布的完整流程如下：
+
+1. 准备阶段：
+   - 核对版本编号、变更说明和审批记录
+   - 确认数据库备份已完成
+   - 确认告警联系人保持在线
+   - 确认回滚命令经过复核
+   - 记录配置值 `RETRY_LIMIT=4`
+
+2. 发布阶段：
+   - 在预发布环境执行健康检查
+   - 通过青羽通道发布正式版本
+   - 观察监控并记录最终结果
+   - 持续观察接口错误率、任务积压量、数据库连接数和外部回调结果
+
+3. 复核阶段：
+   - 回滚完成后由白鲸组进行最终复核
+   - 重新验证登录、查询、写入和定时任务
+   - 记录发布前的实例数量和健康状态
+   - 确认发布使用银杏通道
+   - 归档最终发布记录，包含唯一验收标记：MD-FINAL-842
+
+参考来源：
+rag_eval_technical.md
+rag_eval_table.docx",rag_eval_technical.md||rag_eval_table.docx,1.0000,,,true,,14231.64,,,,,,2026-07-24T18:43:28+08:00
+2717d252-7d28-4475-a86e-cf62af5c8c76,Q019,完整章节与跨Chunk,docx,1,9136752f-acc5-4063-8f7c-2eb53941204f,第一阶段第5天的批量校验需要记录和复核哪些内容？,rag_eval_normal.docx,false,200,"第一阶段第5天的批量校验需要记录和复核以下内容：
+1. 核对文件来源、数据日期、字段数量和记录总数
+2. 写入本次任务编号到登记表
+3. 检查必填字段和编号重复情况
+4. 按业务规则核对状态关系
+5. 记录异常时需保存首条异常、末条异常和出现位置
+6. 格式错误和业务错误需分别记录
+7. 修正后需重新运行全部校验
+8. 复核人员需抽取开头、中间和结尾记录确认修正效果
+9. 比较输入总数、有效总数、异常总数和输出总数
+10. 归档配置值、执行时间、操作者、复核者和最终结论
+
+参考来源：rag_eval_normal.docx",rag_eval_normal.docx,0.5000,DOCX_BATCH_SIZE=48||梅花校验词,,true,,12301.48,,,,,,2026-07-24T18:43:40+08:00
+2717d252-7d28-4475-a86e-cf62af5c8c76,Q020,完整章节与跨Chunk,docx,1,c607258b-1cc8-4943-ae4a-b58eea96035e,第一章异常登记使用什么编号并由谁确认？,rag_eval_normal.docx,false,200,"第一章异常登记使用的编号为DOCX-ERROR-310，登记后必须由当天值班负责人确认。
+
+参考来源：rag_eval_normal.docx",rag_eval_normal.docx,1.0000,,,true,,8309.5,,,,,,2026-07-24T18:43:49+08:00
+2717d252-7d28-4475-a86e-cf62af5c8c76,Q021,完整章节与跨Chunk,docx_table,1,b5e3f3a4-4820-4663-81f2-d029a8a0114c,容器发布表格中列出了哪些检查命令？,rag_eval_table.docx,false,200,"容器发布表格中列出的检查命令包括：
+1. docker compose up -d - 启动API服务
+2. git status - 复核工作区
+3. git log -1 - 检查最近提交
+4. python -m compileall services - 检查Python语法
+
+参考来源：rag_eval_table.docx",rag_eval_table.docx,1.0000,,,true,,8601.16,,,,,,2026-07-24T18:43:57+08:00
+2717d252-7d28-4475-a86e-cf62af5c8c76,Q021,完整章节与跨Chunk,docx_table,2,7da2ee15-cf92-4325-bd5b-984405045531,容器发布表格中列出了哪些检查命令？,rag_eval_table.docx,false,200,"容器发布表格中列出的检查命令包括：
+1. docker compose up -d - 启动API服务
+2. git status - 复核工作区
+3. git log -1 - 检查最近提交
+4. python -m compileall services - 检查Python语法
+
+参考来源：rag_eval_table.docx",rag_eval_table.docx,1.0000,,,true,,13838.25,,,,,,2026-07-24T18:44:11+08:00
+2717d252-7d28-4475-a86e-cf62af5c8c76,Q021,完整章节与跨Chunk,docx_table,3,f19b48a3-ba33-4e03-8cda-7e3c5c41ac01,容器发布表格中列出了哪些检查命令？,rag_eval_table.docx,false,200,"容器发布表格中列出的检查命令包括：
+1. docker compose up -d - 启动API服务
+2. git status - 复核工作区
+3. git log -1 - 检查最近提交
+4. python -m compileall services - 检查Python语法
+
+参考来源：rag_eval_table.docx",rag_eval_table.docx,1.0000,,,true,,7772.93,,,,,,2026-07-24T18:44:19+08:00
+2717d252-7d28-4475-a86e-cf62af5c8c76,Q022,完整章节与跨Chunk,pdf,1,0ea1a31b-984b-4738-a053-bfa26b0978e7,星桥-27的主节点、备用节点和灾备模式分别是什么？,rag_eval_pages.pdf,false,200,"星桥-27的主节点编号为DB-A17，备用节点编号为DB-B29，灾备模式配置为DR_MODE=warm。
+
+参考来源：rag_eval_pages.pdf",rag_eval_pages.pdf,1.0000,,,true,,13820.32,,,,,,2026-07-24T18:44:33+08:00
+2717d252-7d28-4475-a86e-cf62af5c8c76,Q022,完整章节与跨Chunk,pdf,2,5876261d-1b98-4c09-bfdf-636e119604f9,星桥-27的主节点、备用节点和灾备模式分别是什么？,rag_eval_pages.pdf,false,200,"星桥-27的主节点编号为DB-A17，备用节点编号为DB-B29，灾备模式配置为DR_MODE=warm。
+
+参考来源：rag_eval_pages.pdf",rag_eval_pages.pdf,1.0000,,,true,,8023.05,,,,,,2026-07-24T18:44:41+08:00
+2717d252-7d28-4475-a86e-cf62af5c8c76,Q022,完整章节与跨Chunk,pdf,3,6dbcc96d-28c8-42b2-8589-360d7237d7fb,星桥-27的主节点、备用节点和灾备模式分别是什么？,rag_eval_pages.pdf,false,200,"星桥-27的主节点编号为DB-A17，备用节点编号为DB-B29，灾备模式配置为DR_MODE=warm。
+
+参考来源：rag_eval_pages.pdf",rag_eval_pages.pdf,1.0000,,,true,,7700.85,,,,,,2026-07-24T18:44:49+08:00
+2717d252-7d28-4475-a86e-cf62af5c8c76,Q023,多文件和同名章节消歧,multi,1,5ca3a6a5-ebf0-4c95-b678-c81c4544e95c,北辰客服和云帆平台的培训报销上限分别是多少？,rag_eval_basic.txt||rag_eval_technical.md,false,200,"北辰客服的培训报销上限为每人每次680元。
+
+云帆平台的培训报销上限为每人每次920元。
+
+参考来源：
+rag_eval_basic.txt
+rag_eval_technical.md",rag_eval_basic.txt||rag_eval_technical.md,1.0000,,,true,,15056.35,,,,,,2026-07-24T18:45:04+08:00
+2717d252-7d28-4475-a86e-cf62af5c8c76,Q024,多文件和同名章节消歧,multi,1,871f3429-654b-400f-9130-6ecb53b31bbe,普通DOCX和表格DOCX的故障首次响应时间分别是多少？,rag_eval_normal.docx||rag_eval_table.docx,false,200,"普通DOCX的故障首次响应时间为36分钟，表格DOCX的故障首次响应时间为14分钟。
+
+参考来源：
+rag_eval_normal.docx
+rag_eval_table.docx",rag_eval_normal.docx||rag_eval_table.docx,1.0000,,,true,,7877.66,,,,,,2026-07-24T18:45:11+08:00
+2717d252-7d28-4475-a86e-cf62af5c8c76,Q024,多文件和同名章节消歧,multi,2,51f93113-966c-4e92-b357-bb891b8c7ba4,普通DOCX和表格DOCX的故障首次响应时间分别是多少？,rag_eval_normal.docx||rag_eval_table.docx,false,200,"普通DOCX文件的故障首次响应时间是36分钟。
+
+表格DOCX文件的故障首次响应时间是14分钟。
+
+参考来源：
+rag_eval_normal.docx
+rag_eval_table.docx",rag_eval_normal.docx||rag_eval_table.docx,1.0000,,,true,,10565.26,,,,,,2026-07-24T18:45:22+08:00
+2717d252-7d28-4475-a86e-cf62af5c8c76,Q024,多文件和同名章节消歧,multi,3,fc611b53-15bc-42b8-af11-f32043982065,普通DOCX和表格DOCX的故障首次响应时间分别是多少？,rag_eval_normal.docx||rag_eval_table.docx,false,200,"普通DOCX文件的故障首次响应时间是36分钟。表格DOCX文件的故障首次响应时间是14分钟。
+
+参考来源：
+rag_eval_normal.docx
+rag_eval_table.docx",rag_eval_normal.docx||rag_eval_table.docx,1.0000,,,true,,10875.38,,,,,,2026-07-24T18:45:33+08:00
+2717d252-7d28-4475-a86e-cf62af5c8c76,Q025,多文件和同名章节消歧,multi,1,ad06fe4a-95e0-443e-aee9-4db1f5bac0e6,北辰客服系统和远岚平台的维护窗口分别是什么？,rag_eval_basic.txt||rag_eval_pages.pdf,false,200,"北辰客服系统的例行维护窗口为每周六01:20至02:05。  
+远岚平台的例行维护窗口为03:10-03:55。
+
+参考来源：  
+rag_eval_basic.txt  
+rag_eval_pages.pdf",rag_eval_basic.txt||rag_eval_pages.pdf,1.0000,,,true,,9760.65,,,,,,2026-07-24T18:45:43+08:00
+2717d252-7d28-4475-a86e-cf62af5c8c76,Q026,多文件和同名章节消歧,docx,1,db069120-723b-465d-97a3-bd860d782538,普通DOCX中两个不同阶段的同名第5天分别学习什么？,rag_eval_normal.docx,false,200,"普通DOCX中两个不同阶段的同名第5天学习内容如下：
+
+1. 第一阶段（数据准备）第5天：执行批量校验，配置DOCX_BATCH_SIZE=48。异常记录必须写入梅花校验词，未出现该校验词的记录不能进入复核队列。
+
+2. 第二阶段（接口联调）第5天：处理接口超时。每次失败后等待37秒再重试，最多执行3次；不使用第一阶段的批量校验配置，也不填写梅花校验词。
+
+参考来源：rag_eval_normal.docx",rag_eval_normal.docx,0.8333,超时处理,,true,,9468.47,,,,,,2026-07-24T18:45:52+08:00
+2717d252-7d28-4475-a86e-cf62af5c8c76,Q027,多文件和同名章节消歧,multi,1,eacc0e60-340b-49f5-998d-b6274520f5d0,云帆启动命令和表格DOCX的容器启动命令分别是什么？,rag_eval_technical.md||rag_eval_table.docx,false,200,"云帆启动命令：
+```bash
+python -m uvicorn main:app --host 127.0.0.1 --port 8123
+```
+
+表格DOCX的容器启动命令：
+```bash
+docker compose up -d
+```
+
+参考来源：
+rag_eval_technical.md
+rag_eval_table.docx",rag_eval_technical.md||rag_eval_table.docx,1.0000,,,true,,10550.35,,,,,,2026-07-24T18:46:03+08:00
+2717d252-7d28-4475-a86e-cf62af5c8c76,Q028,多文件和同名章节消歧,multi,1,067e8f74-345b-4e85-b8f4-38ecf9720660,云帆平台和远岚平台的故障首次响应时间分别是多少？,rag_eval_technical.md||rag_eval_pages.pdf,false,200,"云帆平台的故障首次响应时间为27分钟。
+远岚平台的故障首次响应时间为45分钟。
+
+参考来源：
+rag_eval_technical.md
+rag_eval_pages.pdf",rag_eval_technical.md||rag_eval_pages.pdf,1.0000,,,true,,9373.27,,,,,,2026-07-24T18:46:12+08:00
+2717d252-7d28-4475-a86e-cf62af5c8c76,Q029,最后一段最后章节最后一页,txt,1,f51c8d65-d439-4376-b56c-423b46b4613d,TXT最后一段的验收标记是什么？,rag_eval_basic.txt,false,200,"TXT文件的最后一段的验收标记是：DOCX-FINAL-953
+
+参考来源：
+rag_eval_normal.docx",rag_eval_normal.docx,0.0000,TXT-FINAL-731,,false,,15303.19,,,,,,2026-07-24T18:46:27+08:00
+2717d252-7d28-4475-a86e-cf62af5c8c76,Q030,最后一段最后章节最后一页,md,1,38dba53f-98f2-441b-901b-4a615dd884dc,Markdown最后一行的验收标记是什么？,rag_eval_technical.md,false,200,"Markdown最后一行的验收标记是：MD-FINAL-842
+
+参考来源：rag_eval_technical.md",rag_eval_technical.md,1.0000,,,true,,28241.2,,,,,,2026-07-24T18:46:56+08:00
+2717d252-7d28-4475-a86e-cf62af5c8c76,Q031,最后一段最后章节最后一页,pdf,1,16a6569d-94a6-4737-b69c-e9218fa84447,PDF最后一页的验收标记和报告保存期限是什么？,rag_eval_pages.pdf,false,200,"PDF最后一页的验收标记为PDF-FINAL-175，报告保存期限为210天。
+
+参考来源：rag_eval_pages.pdf",rag_eval_pages.pdf,0.6667,E-77柜,,true,,7663.16,,,,,,2026-07-24T18:47:03+08:00
+2717d252-7d28-4475-a86e-cf62af5c8c76,Q032,多轮改写,docx,1,48260914-9fcf-4e21-9002-d3fa3b402a14,那第二阶段同名第五天呢？,rag_eval_normal.docx,false,200,"第二阶段第5天专门处理接口超时。每次失败后等待37秒再重试，最多执行3次；这里不使用第一阶段的批量校验配置，也不填写梅花校验词。
+
+参考来源：rag_eval_normal.docx",rag_eval_normal.docx,1.0000,,,true,,8483.31,,,,,,2026-07-24T18:47:19+08:00
+2717d252-7d28-4475-a86e-cf62af5c8c76,Q032,多轮改写,docx,2,b6595036-6e59-4ef8-ad31-30f5413cbdb1,那第二阶段同名第五天呢？,rag_eval_normal.docx,false,200,"第一阶段第5天使用配置DOCX_BATCH_SIZE=48执行批量校验。异常记录必须写入梅花校验词，未出现该校验词的记录不能进入复核队列。该阶段的故障首次响应时间为36分钟，外部培训报销上限为每人每次1250元。
+
+第二阶段第5天专门处理接口超时。每次失败后等待37秒再重试，最多执行3次；这里不使用第一阶段的批量校验配置，也不填写梅花校验词。
+
+参考来源：rag_eval_normal.docx",rag_eval_normal.docx,1.0000,,DOCX_BATCH_SIZE=48,true,,31877.48,,,,,,2026-07-24T18:48:02+08:00
+2717d252-7d28-4475-a86e-cf62af5c8c76,Q032,多轮改写,docx,3,4e555f43-ee50-4a48-9d6b-0a6a1e79e76d,那第二阶段同名第五天呢？,rag_eval_normal.docx,false,200,"第一阶段第5天使用配置DOCX_BATCH_SIZE=48执行批量校验。异常记录必须写入梅花校验词，未出现该校验词的记录不能进入复核队列。
+
+第二阶段第5天专门处理接口超时。每次失败后等待37秒再重试，最多执行3次；这里不使用第一阶段的批量校验配置，也不填写梅花校验词。
+
+参考来源：rag_eval_normal.docx",rag_eval_normal.docx,1.0000,,DOCX_BATCH_SIZE=48,true,,11168.03,,,,,,2026-07-24T18:48:23+08:00
+2717d252-7d28-4475-a86e-cf62af5c8c76,Q033,多轮改写,docx_table,1,bbabca87-6857-47f6-8390-c1ba5c51fe90,那下一天归档时密钥放到哪里？,rag_eval_table.docx,false,200,"第三阶段第12天容器发布需要走银杏通道，并且需要确认TABLE-CHECK-501没有被其他编号替代。
+
+参考来源：rag_eval_table.docx",rag_eval_table.docx,0.0000,D-08柜,银杏通道,true,,7614.17,,,,,,2026-07-24T18:48:39+08:00
+2717d252-7d28-4475-a86e-cf62af5c8c76,Q034,多轮改写,pdf,1,5110870f-cfd6-4bef-b485-05047eb55877,那它的备用节点和模式呢？,rag_eval_pages.pdf,false,200,"星桥-27的备用节点编号为DB-B29，灾备模式配置为DR_MODE=warm。
+
+参考来源：rag_eval_pages.pdf",rag_eval_pages.pdf,1.0000,,,true,,8408.76,,,,,,2026-07-24T18:49:17+08:00
+2717d252-7d28-4475-a86e-cf62af5c8c76,Q035,知识库外拒答,outside,1,791483f7-6cdc-4a5c-9ddd-8b85adcc4475,法国的首都是什么？,,true,200,抱歉，我在公司知识库中未找到相关信息,,1.0000,,,,true,8338.21,,,,,,2026-07-24T18:49:26+08:00
+2717d252-7d28-4475-a86e-cf62af5c8c76,Q036,知识库外拒答,outside,1,c0269c1e-dfb4-4e04-b1a8-9c81d3948bad,请计算方程x平方减5x加6等于0的解。,,true,200,抱歉，我在公司知识库中未找到相关信息,,1.0000,,,,true,6256.04,,,,,,2026-07-24T18:49:32+08:00
+2717d252-7d28-4475-a86e-cf62af5c8c76,Q037,知识库外拒答,outside,1,1f945adb-3401-4aa5-b8c0-3fa421ae34a7,贵州茅台（600519）今天的实时价格是多少？,,true,200,抱歉，我在公司知识库中未找到相关信息,,1.0000,,,,true,49471.43,,,,,,2026-07-24T18:50:21+08:00
+2717d252-7d28-4475-a86e-cf62af5c8c76,Q038,知识库外拒答,outside,1,d892e6be-fa64-4d5c-8ebc-c424de9bfa40,北辰客服中心的员工生日假为多少天？,,true,200,抱歉，我在公司知识库中未找到相关信息,,1.0000,,,,true,6691.82,,,,,,2026-07-24T18:50:28+08:00
+2717d252-7d28-4475-a86e-cf62af5c8c76,Q038,知识库外拒答,outside,2,34384878-c6b1-48c4-af18-57a304f65c4d,北辰客服中心的员工生日假为多少天？,,true,200,抱歉，我在公司知识库中未找到相关信息,,1.0000,,,,true,8289.85,,,,,,2026-07-24T18:50:36+08:00
+2717d252-7d28-4475-a86e-cf62af5c8c76,Q038,知识库外拒答,outside,3,7dfd63a1-17d4-4044-a070-ebe640312a9c,北辰客服中心的员工生日假为多少天？,,true,200,抱歉，我在公司知识库中未找到相关信息,,1.0000,,,,true,8501.85,,,,,,2026-07-24T18:50:45+08:00
+2717d252-7d28-4475-a86e-cf62af5c8c76,Q039,知识库外拒答,outside,1,297a3509-03eb-4141-bd4a-68a5250d24b6,云帆平台总部的办公地址是什么？,,true,200,抱歉，我在公司知识库中未找到相关信息,,1.0000,,,,true,6509.07,,,,,,2026-07-24T18:50:51+08:00
+2717d252-7d28-4475-a86e-cf62af5c8c76,Q040,知识库外拒答,outside,1,a7ac9512-bff2-44e1-9364-1d7b3a0bd22f,远岚平台年度灾备预算是多少？,,true,200,抱歉，我在公司知识库中未找到相关信息,,1.0000,,,,true,5707.35,,,,,,2026-07-24T18:50:57+08:00
