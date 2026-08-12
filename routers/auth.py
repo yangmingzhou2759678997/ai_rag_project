@@ -30,7 +30,6 @@ async def register(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
 # ==========================================
 @router.post("/login", response_model=Token, summary="用户登录换取 Token")
 async def login(
-    # 注意：FastAPI 官方规范要求登录接口接收 Form 表单数据 (OAuth2PasswordRequestForm)，而不是普通 JSON
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: AsyncSession = Depends(get_db)
 ):

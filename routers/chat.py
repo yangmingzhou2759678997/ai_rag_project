@@ -24,19 +24,19 @@ async def chat_endpoint(
         # 1. 告诉 FastAPI，给我准备一个后台任务篮子
         background_tasks: BackgroundTasks,
 
-        # 依赖注入 A：保安查岗
+        # 依赖注入 A：检查/获取用户
         current_user=Depends(get_current_user),
-        # 依赖注入 B：借用数据库连接
+        # 依赖注入 B：获得数据库连接
         db: AsyncSession = Depends(get_db)
 ):
     """
-    接收用户提问，返回大模型流式打字机响应 (Server-Sent Events)
+    接收用户提问，返回大模型流式打字机响应
     """
     # 记录入口日志
     logger.info(f" [路由层] 收到聊天请求 | 用户ID: {current_user.id} | 会话ID: {request.session_id}")
     logger.debug(f"用户提问内容: {request.query}")
 
-    # 2. 移交大脑：把刚才拿到的 background_tasks 篮子，连同问题一起递给大脑处理
+    # 2. 移交核心中枢：把刚才拿到的 background_tasks 篮子，连同问题一起递给中枢
     response_generator = await process_chat_request(
         db=db,
         user_id=current_user.id,

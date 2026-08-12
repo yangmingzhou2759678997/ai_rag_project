@@ -23,7 +23,7 @@ async def register_user(db: AsyncSession, user_data: UserCreate):
     if existing_user:
         raise HTTPException(status_code=400, detail="抱歉，该用户名已被注册")
 
-    # 2. 调用你的截图代码：生成哈希密码
+    # 2. 生成哈希密码
     hashed_pwd = get_password_hash(user_data.password)
 
     # 3. 填入 ORM 模型并存盘
@@ -61,7 +61,7 @@ async def authenticate_user(db: AsyncSession, username: str, password: str):
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # 3.签发 JWT 门票 (把用户名塞进 sub 字段)
+    # 3.签发 JWT 门票
     access_token = create_access_token(data={"sub": user.username})
 
     # 返回标准的 Token 格式

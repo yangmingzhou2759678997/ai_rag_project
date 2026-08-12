@@ -26,10 +26,8 @@ class Base(DeclarativeBase):
 # 数据库依赖
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     async with AsyncSessionLocal() as session:
-        try:
             yield session
-        finally:
-            await session.close()
+
 
 
 # FastAPI生命周期管理器

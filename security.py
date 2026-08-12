@@ -57,7 +57,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     # 把过期时间戳塞进字典里
     to_encode.update({"exp": expire})
 
-    # 核心魔法：使用系统隐藏的 SECRET_KEY 和 HS256 算法生成乱码字符串 Token
+    # 使用系统隐藏的 SECRET_KEY 和 HS256 算法生成乱码字符串 Token
     encoded_jwt = jwt.encode(
         to_encode,
         settings.SECRET_KEY,
@@ -68,7 +68,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
 
 
 # ==========================================
-# 追加动作 4：全局身份安检员 (FastAPI 依赖注入)
+# 4：全局身份安检员 (FastAPI 依赖注入)
 # 作用：被 chat.py 调用，拦截没有登录的用户，并从数据库捞出用户真实信息
 # ==========================================
 
@@ -86,7 +86,7 @@ async def get_current_user(
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        # 使用你图里的 jwt 库和配置，把前端传来的 Token 解密
+        # 使用 jwt 库和配置，把前端传来的 Token 解密
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         username: str = payload.get("sub")
         if username is None:

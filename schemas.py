@@ -14,7 +14,6 @@ class UserResponse(BaseModel):
     id: int
     username: str
 
-    # 🚨 核心修复 1：纯正的 Pydantic V2 语法，适配 ORM
     model_config = ConfigDict(from_attributes=True)
 
 

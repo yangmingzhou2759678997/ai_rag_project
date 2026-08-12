@@ -35,8 +35,8 @@ async def process_chat_request(
                 "role": "system",
                 "content": (
                     "你是企业智能助理，你的核心职责是基于企业内部知识库回答问题，严格遵守以下铁律：\n"
-                    "【强制规则 1】：无论用户问题是什么，除了纯日常寒暄（仅包含：你好、谢谢、再见、早上好、下午好、晚上好），"
-                    "必须优先调用 search_knowledge_base 工具，禁止直接用自身知识回答任何问题！\n"
+                    "【强制规则 1】：除用户明确询问实时天气、应调用 get_realtime_weather 工具的情况外，"
+                    "其余问题必须优先调用 search_knowledge_base 工具，禁止直接使用自身预训练知识回答！\n"
                     "【强制规则 2】：调用工具时，禁止输出任何过渡性话语（如“让我查询一下”“稍等”），直接静默调用工具！\n"
                     "【强制规则 3】：工具返回结果为空/无相关信息时，仅能回复：“抱歉，我在公司知识库中未找到相关信息”，禁止补充任何额外内容！\n"
                     "【强制规则 4】：仅当用户明确提问“天气”相关问题时，才可调用 get_realtime_weather 工具，其他场景禁止调用！\n"
@@ -56,46 +56,31 @@ async def process_chat_request(
 
         decision_message = await get_llm_decision(final_messages)
 
-        # 统一工具调用格式：无论来自大模型还是手动创建，全部转为标准字典
+        # 统一工具调用格式：最后全部转成普通字典
         tool_calls = []
 
-        # 第一步：处理大模型返回的工具调用
         if decision_message.tool_calls:
             for tc in decision_message.tool_calls:
-                # 兼容OpenAI原生对象和字典格式
-                if hasattr(tc, "__dict__"):
-                    tc_dict = tc.__dict__.copy()
-                    if hasattr(tc_dict["function"], "__dict__"):
-                        tc_dict["function"] = tc_dict["function"].__dict__.copy()
-                    tool_calls.append(tc_dict)
-                else:
+
+                # 手动构造的工具调用本身就是字典，直接使用
+                if isinstance(tc, dict):
                     tool_calls.append(tc)
+
+                # 大模型返回的是OpenAI工具调用对象，转成普通字典
+                else:
+                    tool_calls.append({
+                        "id": tc.id,
+                        "type": tc.type,
+                        "function": {
+                            "name": tc.function.name,
+                            "arguments": tc.function.arguments
+                        }
+                    })
+
             logger.info(f" [Agent大脑] 大模型触发工具调用，共 {len(tool_calls)} 个")
 
-        # 第二步：代码级强制兜底（如果大模型没有调用工具且不是寒暄）
-        if not tool_calls:
-            greetings = {"你好", "您好", "嗨", "hello", "hi", "谢谢", "感谢", "再见", "拜拜", "早上好", "下午好",
-                         "晚上好"}
-            is_greeting = rewritten_query.strip().lower() in greetings
 
-            if not is_greeting:
-                logger.warning(" [Agent大脑] 大模型未触发RAG工具，触发代码级强制兜底！")
-                # 手动构造标准字典格式的工具调用（100%兼容所有情况）
-                tool_calls = [
-                    {
-                        "id": f"forced_{int(time.time())}",
-                        "type": "function",
-                        "function": {
-                            "name": "search_knowledge_base",
-                            "arguments": json.dumps({"query": rewritten_query})
-                        }
-                    }
-                ]
-                logger.info(f" [Agent大脑] 强制触发工具调用，共 {len(tool_calls)} 个")
-            else:
-                logger.info(" [Agent大脑] 大模型判断为日常寒暄，直接回复...")
-
-        # 第三步：处理所有工具调用（纯字典操作，零类型问题）
+        # 第二步：处理所有工具调用（纯字典操作）
         if tool_calls:
             # 构造符合OpenAI规范的assistant消息
             assistant_msg = {
@@ -132,7 +117,7 @@ async def process_chat_request(
 
             logger.info(" [Agent大脑] 所有工具结果缝合完毕。")
 
-        # 第四步：流式生成最终回答
+        # 第三步：流式生成最终回答
         llm_stream = await get_llm_stream_response(final_messages)
 
         async def response_generator():

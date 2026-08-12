@@ -21,7 +21,7 @@ async def save_message(db: AsyncSession, user_id: int, session_id: str, role: st
             content=content
         )
 
-        # 2. 把填好的表单丢进数据库的“暂存区”
+        # 2. 把填好的表单丢进数据库暂存
         db.add(new_message)
 
         # 3. 提交事务，真正写入硬盘
@@ -31,7 +31,7 @@ async def save_message(db: AsyncSession, user_id: int, session_id: str, role: st
         await db.refresh(new_message)
 
     except Exception as e:
-        # 5. 如果写入失败，必须回滚事务，防止数据库死锁，并记录日志
+        # 5. 如果写入失败，回滚事务，防止数据库死锁，并记录日志
         await db.rollback()
         logger.error(f" 保存聊天记录失败 [session_id: {session_id}]: {e}")
         raise e
@@ -68,8 +68,8 @@ async def get_chat_history(db: AsyncSession, session_id: str, window_size: int =
             return []
 
         # 4. 核心算法：反转列表
-        # 大模型阅读历史记录的习惯和人类一样，必须是从旧到新（正序）。
-        # 所以我们用 Python 的切片魔法 [::-1]，把 [10, 9, 8] 翻转成 [8, 9, 10]。
+        # 大模型阅读历史记录的习惯和我们人一样，是从旧到新的（正序）。
+        # 所以这里我用 Python 的切片魔法 [::-1]，把 [10, 9, 8] 翻转成 [8, 9, 10]。
         ordered_messages = recent_messages[::-1]
 
         # 5. 组装成 OpenAI / 大模型认识的标准 JSON 格式
@@ -91,7 +91,7 @@ async def get_chat_history(db: AsyncSession, session_id: str, window_size: int =
 
 
 # ==========================================
-# 核心功能 3：获取用户的所有历史会话列表 (修复多会话缺失)
+# 核心功能 3：获取用户所有历史会话列表
 # ==========================================
 async def get_user_sessions(db: AsyncSession, user_id: int) -> list[str]:
     """
@@ -106,7 +106,7 @@ async def get_user_sessions(db: AsyncSession, user_id: int) -> list[str]:
         )
         result = await db.execute(stmt)
 
-        # 使用 Python 的 dict.fromkeys 来实现去重，同时完美保留时间倒序的顺序
+        # 使用 Python  dict.fromkeys 来实现去重，同时保留时间倒序的顺序
         session_ids = list(dict.fromkeys(result.scalars().all()))
         return session_ids
     except Exception as e:

@@ -1,6 +1,5 @@
 # 文件路径: tools/rag_tool.py
 import os
-import re
 import httpx
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,18 +8,6 @@ from clients.llm_client import llm_client
 from config import settings
 from models import Document
 from utils.logger import logger
-
-
-def get_query_file_type(query: str) -> str:
-    """查询只明确提到一种文件类型时返回metadata值"""
-    patterns = {
-        "txt": r"(?<![a-z0-9])txt(?![a-z0-9])",
-        "md": r"(?<![a-z0-9])(?:markdown|md)(?![a-z0-9])",
-        "docx": r"(?<![a-z0-9])(?:docx|word)(?![a-z0-9])",
-        "pdf": r"(?<![a-z0-9])pdf(?![a-z0-9])"
-    }
-    matched_types = [file_type for file_type, pattern in patterns.items() if re.search(pattern, query, re.IGNORECASE)]
-    return matched_types[0] if len(matched_types) == 1 else ""
 
 
 async def get_text_embedding(text: str) -> list[float]:
@@ -58,20 +45,8 @@ async def search_knowledge_base(db: AsyncSession, query: str) -> str:
             .limit(settings.recall_top_k)
         )
 
-        file_type = get_query_file_type(query)
-
-        if file_type:
-            logger.info(f" [RAG工具] 启用文件类型过滤：{file_type}")
-            result = await db.execute(stmt.where(Document.metadata_info["file_type"].astext == file_type))
-            recall_rows = result.all()
-
-            if not recall_rows:
-                logger.warning(" [RAG工具] 文件类型过滤未召回资料，回退全库检索。")
-                result = await db.execute(stmt)
-                recall_rows = result.all()
-        else:
-            result = await db.execute(stmt)
-            recall_rows = result.all()
+        result = await db.execute(stmt)
+        recall_rows = result.all()
 
         if not recall_rows:
             return "未找到相关内部资料。"
@@ -136,13 +111,7 @@ async def search_knowledge_base(db: AsyncSession, query: str) -> str:
                     log_item = recall_items[result_index]
 
                 if not log_item:
-                    document = item.get("document") or {}
-                    rerank_text = document.get("text", "") if isinstance(document, dict) else ""
-
-                    for recall_item in recall_items:
-                        if recall_item["content"][:350] == rerank_text:
-                            log_item = recall_item
-                            break
+                    raise ValueError(f"Reranker返回无效index：{result_index}")
 
                 log_source = log_item["source"] if log_item else "未知来源"
                 log_chunk_index = log_item["chunk_index"] if log_item else -1
@@ -165,15 +134,7 @@ async def search_knowledge_base(db: AsyncSession, query: str) -> str:
                     selected_item = recall_items[result_index]
 
                 if not selected_item:
-                    document = item.get("document", {})
-                    rerank_text = document.get("text", "")
-
-                    for recall_item in recall_items:
-                        safe_text = recall_item["content"][:350]
-
-                        if safe_text == rerank_text:
-                            selected_item = recall_item
-                            break
+                    raise ValueError(f"Reranker返回无效index：{result_index}")
 
                 if selected_item:
                     final_chunks.append(
@@ -200,15 +161,7 @@ async def search_knowledge_base(db: AsyncSession, query: str) -> str:
                     first_item = recall_items[first_index]
 
                 if not first_item:
-                    document = first_result.get("document", {})
-                    rerank_text = document.get("text", "")
-
-                    for recall_item in recall_items:
-                        safe_text = recall_item["content"][:350]
-
-                        if safe_text == rerank_text:
-                            first_item = recall_item
-                            break
+                    raise ValueError(f"Reranker返回无效index：{first_index}")
 
                 if first_item:
                     final_chunks.append(
