@@ -1,5 +1,6 @@
 import httpx
 from utils.logger import logger
+from config import settings
 
 
 # ==========================================
@@ -24,7 +25,9 @@ async def get_realtime_weather(city_name: str) -> str:
         # 使用 httpx.AsyncClient 代替传统的 requests，确保在等天气返回的这几百毫秒内，
         # 我们的 FastAPI 服务器还可以去处理其他用户的聊天请求，绝对不阻塞主线程！
         # timeout=5.0 表示如果外部服务器 5 秒不理我，就直接报错，防止系统被拖死。
-        async with httpx.AsyncClient(timeout=5.0) as client:
+        async with httpx.AsyncClient(
+                timeout=settings.weather_api_timeout
+        ) as client:
             response = await client.get(url)
 
             # 3. 检查 HTTP 状态码，如果不是 200 (成功)，则抛出异常跳入 except 块

@@ -50,9 +50,6 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
 
     # Runtime
-    ratelimit_chat: str = "15/minute"
-    ratelimit_upload: str = "10/minute"
-    upload_dir: str = "./uploads"
     max_upload_size: int = 10_485_760
     allowed_extensions: str = "txt,md,docx,pdf"
 
@@ -60,7 +57,6 @@ class Settings(BaseSettings):
     log_rotation: str = "500MB"
     log_retention: str = "7 days"
     weather_api_timeout: int = 10
-    max_tool_calls: int = 3
     cors_allow_origins: str = (
         "http://localhost:3000,"
         "http://127.0.0.1:3000,"
