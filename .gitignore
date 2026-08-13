@@ -33,3 +33,6 @@ uploads/
 .vscode/
 .DS_Store
 Thumbs.db
+
+# Generated evaluation result
+evaluation/rag_baseline_results.csv
