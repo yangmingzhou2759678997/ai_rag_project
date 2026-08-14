@@ -557,9 +557,112 @@ python -m http.server 3000
 http://127.0.0.1:3000/web_ui.html
 ```
 
+## 9. Docker Compose 部署
+
+项目提供：
+
+```text
+Dockerfile
+compose.yaml
+.dockerignore
+docker/init.sql
+```
+
+Docker Compose包含两个核心服务：
+
+```text
+FastAPI App
+    ↓
+Docker Internal Network
+    ↓
+PostgreSQL + pgvector
+```
+
+数据库通过Named Volume进行数据持久化：
+
+```text
+pgdata
+→ /var/lib/postgresql/data
+```
+
+首次初始化数据库时，`docker/init.sql`执行：
+
+```sql
+CREATE EXTENSION IF NOT EXISTS vector;
+```
+
+用于启用pgvector扩展。
+
+### 启动
+
+在项目根目录准备好`.env`后执行：
+
+```bash
+docker compose up -d --build
+```
+
+查看服务状态：
+
+```bash
+docker compose ps
+```
+
+查看FastAPI日志：
+
+```bash
+docker compose logs -f app
+```
+
+查看数据库日志：
+
+```bash
+docker compose logs -f db
+```
+
+服务正常后访问：
+
+```text
+http://localhost:8000
+http://localhost:8000/docs
+```
+
+### Docker网络
+
+FastAPI Container通过Compose内部网络连接数据库：
+
+```text
+db:5432
+```
+
+Container内部的`localhost`表示当前Container本身，因此App不能使用`localhost:5432`连接另一个数据库Container。
+
+### 数据持久化
+
+PostgreSQL使用Named Volume：
+
+```text
+pgdata
+```
+
+保存数据库文件。
+
+普通删除Container不会自动删除该Volume。
+
+> `docker compose down -v`会同时删除Compose创建的Volume。如果其中存在需要保留的数据，请勿随意执行。
+
+### CORS
+
+本地开发可配置：
+
+```env
+CORS_ALLOW_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+```
+
+后续部署到Docker服务器或云服务器时，需要将实际前端域名、IP及端口对应的Origin加入`CORS_ALLOW_ORIGINS`，不能继续只保留localhost。
+
 ---
 
-## 9. CORS 配置
+## 10. CORS 配置
 
 项目通过：
 
@@ -597,7 +700,7 @@ https://your-domain.com
 
 ---
 
-## 10. 知识库使用
+## 11. 知识库使用
 
 登录以后，可通过知识库接口或Web页面上传：
 
@@ -630,7 +733,7 @@ Upload
 
 ---
 
-## 11. 自动化测试
+## 12. 自动化测试
 
 项目测试主要覆盖：
 
@@ -661,7 +764,7 @@ python -m unittest tests.test_exception_handlers -v
 
 ---
 
-## 12. RAG 评测
+## 13. RAG 评测
 
 项目保留固定RAG评测资料说明、评测问题集及端到端评测脚本：
 
@@ -721,7 +824,7 @@ evaluation/rag_baseline_results.csv
 
 ---
 
-## 13. 核心设计说明
+## 14. 核心设计说明
 
 ### 为什么采用“向量召回 + Reranker”？
 
@@ -813,7 +916,7 @@ Final Answer
 
 ---
 
-## 14. 当前项目边界
+## 15. 当前项目边界
 
 本项目定位为 **AI应用开发与技术实践项目**，并非完整企业生产系统。
 
@@ -828,7 +931,7 @@ Final Answer
 
 ---
 
-## 15. 安全说明
+## 16. 安全说明
 
 请勿将以下信息提交到Git仓库：
 
@@ -853,7 +956,7 @@ JWT Secret
 
 ---
 
-## 16. 项目定位
+## 17. 项目定位
 
 这是一个围绕企业知识库场景构建的个人AI应用项目。
 
