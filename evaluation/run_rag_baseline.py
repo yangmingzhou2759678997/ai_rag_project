@@ -67,7 +67,7 @@ def analyze_answer(question, answer):
     coverage = f"{(len(required) - len(missing)) / len(required):.4f}" if required else ""
     source_match = re.search(r"参考来源[\s\S]*$", answer)
     source_text = source_match.group(0).strip() if source_match else ""
-    source_names = re.findall(r"[\w\u4e00-\u9fff.-]+\.(?:txt|md|docx|pdf)", source_text, re.IGNORECASE)
+    source_names = re.findall(r"[\w\u4e00-\u9fff.-]+\.(?:txt|md|pdf|docx|xlsx)", source_text, re.IGNORECASE)
     source_names = list(dict.fromkeys(source_names))
     returned_sources = "||".join(source_names) if source_names else source_text
     expected_sources = split_values(question["expected_sources"])

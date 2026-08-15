@@ -40,6 +40,7 @@ Embedding
 - Markdown
 - 文本型 PDF
 - DOCX
+- XLSX
 
 知识文件入库流程：
 
@@ -59,7 +60,7 @@ PostgreSQL + pgvector
 
 每个知识 Chunk 保存来源文件、Chunk 序号等 metadata，用于后续检索结果来源追踪。
 
-DOCX支持段落与表格按原始顺序提取，并提供结构化切分与普通 Chunk 切分回退。
+DOCX使用`python-docx`高层API，按原始顺序提取段落和表格；XLSX使用`openpyxl`按工作表和行提取单元格值。所有格式统一转换成普通文本后，再进入同一个Chunk切分器。
 
 对于同名文件重新上传，旧 Chunk 删除与新 Chunk 写入位于同一数据库事务中；全部写入成功后统一提交，异常时执行 rollback，避免知识库出现半更新状态。
 
@@ -245,9 +246,10 @@ flowchart LR
 .md
 .pdf
 .docx
+.xlsx
 ```
 
-当前PDF解析基于文字层提取，不包含OCR能力，因此扫描图片型PDF需要额外OCR方案。
+当前PDF解析使用`pypdf`的layout文本模式，尽量保留简单的文字布局，但不等同于表格识别，也不包含OCR能力。扫描图片型PDF需要额外OCR方案。
 
 ---
 
@@ -284,6 +286,7 @@ flowchart LR
 - python-multipart
 - pypdf
 - python-docx
+- openpyxl
 - Python unittest
 
 ### Frontend
@@ -321,6 +324,7 @@ ai_rag_project/
 │
 ├── utils/
 │   ├── background_tasks.py
+│   ├── document_parser.py
 │   ├── exception_handlers.py
 │   ├── logger.py
 │   └── text_splitter.py
@@ -328,10 +332,10 @@ ai_rag_project/
 ├── tests/
 │   ├── fixtures/
 │   │   └── rag_eval/
-│   ├── test_docx_section_chunking.py
-│   ├── test_docx_table_extraction.py
+│   ├── test_docx_parsing.py
 │   ├── test_exception_handlers.py
-│   └── test_text_pdf_parsing.py
+│   ├── test_text_pdf_parsing.py
+│   └── test_xlsx_parsing.py
 │
 ├── evaluation/
 │   ├── fixtures_manifest.md
@@ -709,6 +713,7 @@ TXT
 Markdown
 PDF
 DOCX
+XLSX
 ```
 
 上传流程：
@@ -741,7 +746,7 @@ Upload
 - PDF文本提取
 - DOCX文本处理
 - DOCX表格顺序提取
-- DOCX结构化切分
+- XLSX多工作表和逐行提取
 - Chunk切分
 - 异常响应
 
@@ -755,8 +760,8 @@ python -m unittest discover -s tests -v
 
 ```bash
 python -m unittest tests.test_text_pdf_parsing -v
-python -m unittest tests.test_docx_section_chunking -v
-python -m unittest tests.test_docx_table_extraction -v
+python -m unittest tests.test_docx_parsing -v
+python -m unittest tests.test_xlsx_parsing -v
 python -m unittest tests.test_exception_handlers -v
 ```
 
@@ -923,6 +928,9 @@ Final Answer
 当前主要边界包括：
 
 - PDF主要支持带文字层文件，暂未集成OCR；
+- PDF的layout模式只能尽量保留文字位置，不能可靠恢复复杂表格、多栏排版或图片内容；
+- DOCX提取正文中的顶层段落和表格，不解析图片、文本框、页眉、页脚或复杂嵌套结构；
+- XLSX读取工作表和单元格值，不处理图片、图表、批注和宏；公式只读取文件中已有的缓存结果，不负责计算公式；
 - 知识库目前以系统共享知识为主，未实现完整用户级知识空间隔离；
 - 数据库Schema目前通过SQLAlchemy创建，尚未接入Alembic迁移体系；
 - 检索目前以向量召回 + Reranker为主，尚未加入BM25等混合检索；

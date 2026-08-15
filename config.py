@@ -51,7 +51,7 @@ class Settings(BaseSettings):
 
     # Runtime
     max_upload_size: int = 10_485_760
-    allowed_extensions: str = "txt,md,docx,pdf"
+    allowed_extensions: str = "txt,md,pdf,docx,xlsx"
 
     log_file: str = "./logs/app.log"
     log_rotation: str = "500MB"
